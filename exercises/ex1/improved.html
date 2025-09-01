@@ -27,24 +27,32 @@
     const MAX_NUM = 100;
     const rnd = Math.floor((Math.random() * MAX_NUM) + MIN_NUM); // assign a random number from 1 - 100
 
-    goButton.onclick = function () {
-        // Handle user's guess.
-        // Get the input field value with:
-        let v = parseInt(inputField.value);
-
-        // handle response (too high, low, or correct)
-        if (v > rnd) {
+    const checkGuess = (guess) => {
+        // handle response (out of range, too high, low, correct, invalid)
+        if (guess > MAX_NUM || guess < MIN_NUM) {
+            resultText.innerText = `Choose a number between 1 and 100. ${guess} is out of range.`;
+        }
+        else if (guess > rnd) {
             resultText.innerText = "Too high!";
         }
-        else if (v < rnd) {
+        else if (guess < rnd) {
             resultText.innerText = "Too low!";
         }
-        else if (v === rnd) {
+        else if (guess === rnd) {
             resultText.innerText = "Correct!";
         }
         else {
             resultText.innerHTML = "Your guess was not a valid number.";
         }
+    }
+
+    goButton.onclick = function () {
+        // Handle user's guess.
+        // Get the input field value with:
+        let v = parseInt(inputField.value);
+
+        // use helper function
+        checkGuess(v);
     }
 
 </script>
