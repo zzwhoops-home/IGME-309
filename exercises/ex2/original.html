@@ -1,15 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IGME 309 Ex 2 - Zach Deng</title>
 </head>
+
 <body>
     <canvas id="gl-canvas" width="800" height="800"></canvas>
-    
-    <script id="vertex" type="x-shader/x-vertex"></script>
-    <script id="fragment" type="x-shader/x-fragment"></script>
+
+    <script id="vertex" type="x-shader/x-vertex">
+        #version 300 es
+
+        in vec4 vertexPosition;
+
+        void main() {
+            gl_Position = vertexPosition;
+        }
+    </script>
+
+    <script id="fragment" type="x-shader/x-fragment">
+        #version 300 es
+        precision highp float;
+
+        out vec4 fragColor;
+
+        void main() {
+            fragColor = vec4(1, 0, 0, 1);
+        }
+    </script>
 
     <script>
         // get references to canvas and vertex/fragment code
@@ -33,7 +53,7 @@
         }
 
         const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-        gl.shaderSource(fragmentShader, vertexCode.trim());
+        gl.shaderSource(fragmentShader, fragmentCode.trim());
         gl.compileShader(fragmentShader);
         if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
             alert("Warning, shader failed to compile.");
@@ -51,6 +71,28 @@
         }
         gl.useProgram(program);
 
+        // create vertices
+        const vertices = [
+            [-0.5, 0.5, 0], // [x, y, z]
+            [0.5, 0.5, 0],
+            [0, -0.5, 0],
+        ];
+        // convert to JS array
+        const vertexData = new Float32Array(vertices.flat());
+
+        // feed into GPU buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+        gl.bufferData(gl.ARRAY_BUFFER, vertexData, gl.STATIC_DRAW);
+
+        // attach to vertex buffer
+        const vertexPosition = gl.getAttribLocation(program, "vertexPosition");
+        gl.enableVertexAttribArray(vertexPosition);
+        gl.vertexAttribPointer(vertexPosition, 3, gl.FLOAT, false, 0, 0);
+
+        // draw arrays
+        gl.drawArrays(gl.TRIANGLES, 0, vertices.length);
+
     </script>
 </body>
+
 </html>
