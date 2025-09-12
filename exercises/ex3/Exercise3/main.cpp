@@ -8,8 +8,7 @@
 int width, height;
 bool useRedColor = true;
 
-const float CONSTANT_HEIGHT = 10.0f;
-const float CONSTANT_WIDTH = 10.0f;
+const float SCALING_RATIO = 0.01f;
 
 void init(void)
 {
@@ -21,47 +20,20 @@ void init(void)
 // called when window is first created or when window is resized
 void reshape(int w, int h)
 {
-    // update thescreen dimensions
+    // update the screen dimensions
     width = w;
     height = h;
 
     // do an orthographic parallel projection, limited by screen/window size
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    // case 1: wider than tall
-    if (width >= height) {
-        // we want to scale in the x direction to fit a fixed height
-        float ratio = (float)width / (float)height;
+    // calculate half of the window's dimensions
+    float halfWidth = (float)width * SCALING_RATIO;
+    float halfHeight = (float)height * SCALING_RATIO;
 
-        // some amount of the width needs to cover 0 -> 10, with margins of size a
-        // so width stretches from -a to 10 + a. we calculate the difference between the constant and scaled ratio
-        // this gives us 2x the margin
-        float margin = CONSTANT_HEIGHT * ratio - CONSTANT_HEIGHT;
-        
-        // we split the margin in "half" to center the 0 -> 10 region
-        float left = -margin * 0.5;
-        float right = CONSTANT_HEIGHT + (margin * 0.5);
-
-        std::cout << "width greater: " << left << " " << right << std::endl;
-
-        gluOrtho2D(left, right, 0, CONSTANT_HEIGHT);
-    }
-    // case 2: taller than wide
-    else {
-        // we want to scale in y direction to fit fixed width
-        float ratio = (float)height / float(width);
-
-        //
-        float margin = CONSTANT_WIDTH * ratio - CONSTANT_WIDTH;
-
-        // we split the margin in "half" to center the 0 -> 10 region
-        float bottom = -margin * 0.5;
-        float top = CONSTANT_WIDTH + (margin * 0.5);
-
-        //std::cout << "height greater: " << bottom << " " << top << std::endl;
-
-        gluOrtho2D(0, CONSTANT_WIDTH, bottom, top);
-    }
+    // Set up an orthographic projection where (0,0) is the center of the window
+    // and one unit corresponds to one pixel.
+    gluOrtho2D(-halfWidth, halfWidth, -halfHeight, halfHeight);
 
     /* tell OpenGL to use the whole window for drawing */
     glViewport(0, 0, (GLsizei)width, (GLsizei)height);
@@ -90,9 +62,9 @@ void display()
     }
 
     glBegin(GL_TRIANGLES);
-    glVertex2f(3, 7);
-    glVertex2f(7, 7);
-    glVertex2f(5, 3);
+    glVertex2f(-2.0f, 2.0f);  // top-left
+    glVertex2f(2.0f, 2.0f);  // top-right
+    glVertex2f(0.0f, -2.0f);  // middle-bottom
     glEnd();
 
     glutSwapBuffers();
