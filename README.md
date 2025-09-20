@@ -29,7 +29,7 @@ Set path to .lib:
 1. Go to project properties
 2. Under Linker -> General, look to right
 3. There is Additional Library Directories field.
-4. Link your .lib path there by adding $(SolutionDir)/MyLib/lib/x32.
+4. Link your .lib path there by adding $(SolutionDir)/MyLib/lib/x64.
 5. Under Linker -> Input, look to right
 6. There is Additional Dependencies field.
 7. Link your libs there by adding glew32.lib;freeglut.lib.
@@ -38,5 +38,5 @@ Set path to .dll:
 1. Go to project properties
 2. Under Configuration Properties -> Debugging, look to the right.
 3. There's an Environment field.
-4. Link your .dll path there by adding PATH=%PATH%;$(SolutionDir)/MyLib/dll/x32.
+4. Link your .dll path there by adding PATH=%PATH%;$(SolutionDir)/MyLib/dll/x64.
 
