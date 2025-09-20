@@ -1,12 +1,11 @@
-﻿#define _USE_MATH_DEFINES
-
-#ifdef __APPLE__
+﻿#ifdef __APPLE__
 #include <GLUT/glut.h> // include glut for Mac
 #else
 #include <GL/freeglut.h> //include glut for Windows
 #endif
 
-#include <cmath>
+#include <iostream>
+#include "functions.h"
 
 // the window's width and height
 int width, height;
@@ -15,13 +14,14 @@ float canvasWidth, canvasHeight;
 // user settings
 const int minVertices = 3;
 const int maxVertices = 100;
+// global variable
 int circleVertices = 10;
 
 void init(void)
 {
     // initialize the size of the window
-    width = 400;
-    height = 400;
+    width = 600;
+    height = 600;
 
     canvasWidth = 10.0f;
     canvasHeight = 10.0f;
@@ -45,60 +45,85 @@ void reshape(int w, int h)
     glutPostRedisplay();
 }
 
-void drawCircle(float x, float y, float radius, float color[]) {
-    glColor3f(color[0], color[1], color[2]);
-
-    // draw circle
-    glBegin(GL_POLYGON);
-    for (int i = 0; i < circleVertices; i++) {
-        float theta = ((float)i / circleVertices) * (M_PI * 2.0f);
-
-        glVertex2f(x + radius * cos(theta), y + radius * sin(theta));
-    }
-    glEnd();
-}
-
 void display()
 {
-    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
     // wipe the entire color buffer to the current clear color.
     glClear(GL_COLOR_BUFFER_BIT);
-    
-    glColor3f(1.0f, 0.0f, 0.0f); // blue
 
-    float color[] = {1.0f, 0.0f, 0.0f};
-    drawCircle(5.0f, 5.0f, 2.0f, color);
+    // BEGIN PANDA DRAWING
+    // ears (in the back)
+    drawFilledCircle(0.0, 0.0, 0.0, 6.25, 8.25, 0.5); // left ear
+    drawFilledCircle(0.0, 0.0, 0.0, 3.75, 8.25, 0.5); // right ear
+    drawWireframeCircle(0.6, 0.0, 0.85, 6.25, 8.25, 0.55, 5.0); // left ear outline
+    drawWireframeCircle(0.6, 0.0, 0.85, 3.75, 8.25, 0.55, 5.0); // left ear outline
 
-    //glBegin(GL_TRIANGLES);
-    //glVertex2f(-2.0f, 2.0f);  // top-left
-    //glVertex2f(2.0f, 2.0f);  // top-right
-    //glVertex2f(0.0f, -2.0f);  // middle-bottom
-    //glEnd();
+    // Panda body
+    drawFilledCircle(0.75, 0.0, 1.0, 5.0, 4.0, 1.25); // purple body
+    drawFilledCircle(1.0, 1.0, 1.0, 5.0, 6.5, 2.0); // white head
+
+    // nose
+    drawFilledCircle(0.0, 0.0, 0.0, 5.0, 6.0, 0.4); // main nose
+    drawFilledCircle(1.0, 1.0, 1.0, 4.8, 6.0, 0.1); // highlight
+
+    // eyes
+    drawFilledCircle(0.0, 0.0, 0.0, 4.0, 6.75, 0.5); // left eye
+    drawFilledCircle(0.0, 0.0, 0.0, 6.0, 6.75, 0.5); // right eye
+    drawFilledCircle(1.0, 1.0, 1.0, 4.15, 6.65, 0.3); // left pupil
+    drawFilledCircle(1.0, 1.0, 1.0, 5.85, 6.65, 0.3); // right pupil
+    drawWireframeCircle(0.0, 0.0, 0.0, 4.15, 6.65, 0.3, 1.5); // left pupil
+    drawWireframeCircle(0.0, 0.0, 0.0, 5.85, 6.65, 0.3, 1.5); // right pupil
+    drawFilledCircle(0.8, 0.0, 0.0, 4.15, 6.65, 0.25); // inner left pupil
+    drawFilledCircle(0.8, 0.0, 0.0, 5.85, 6.65, 0.25); // inner right pupil
+
+    // hands
+    drawFilledCircle(0.8, 0.0, 0.0, 5.9, 4.5, 0.5); // left hand
+    drawFilledCircle(0.8, 0.0, 0.0, 4.1, 4.5, 0.5); // right hand
+
+    // feet
+    drawFilledCircle(0.8, 0.0, 0.0, 6.2, 3.25, 0.7); // left foot
+    drawFilledCircle(0.8, 0.0, 0.0, 3.8, 3.25, 0.7); // right foot
+
+    // END PANDA DRAWING
 
     glutSwapBuffers();
 }
 
 void keyboard(unsigned char key, int x, int y) {
+    // log mouse position
+    std::cout << "X: " << x / 60.0f << " Y: " << (canvasHeight) - (y / 60.0f) << std::endl;
+
     switch (key) {
     // esc leaves game
     case 27:
         exit(0);
         break;
-    case '+':
+    // technically "+", but without pressing shift
+    case '=':
         if (circleVertices + 1 <= maxVertices) {
             circleVertices++;
         }
+
+        // request redraw
+        glutPostRedisplay();
         break;
     case '-':
         if (circleVertices - 1 >= minVertices) {
             circleVertices--;
         }
+
+        // request redraw
+        glutPostRedisplay();
         break;
     }
+    std::cout << circleVertices << std::endl;
 }
 
 int main(int argc, char** argv)
 {
+    // call init function
+    init();
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 
