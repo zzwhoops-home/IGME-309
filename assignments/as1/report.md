@@ -1,6 +1,8 @@
 # Assignment 1: Draw a panda - Learning Report
 For this assignment, I used the given panda as a reference image, but I just recolored the parts of the panda to make an angry panda with red eyes.
 
+For your reference, there are multiple files because I created files to help manage my functions: `functions.cpp` and its header file `functions.h`.
+
 I also created a log statement that would just log the `x` and `y` values that the `keyboard()` function gets whenever GLUT uses it as a callback. This helped me figure out where exactly I should place circles to make everything a little less tedious.
 
 I learned a lot about OpenGL basics from doing this exercise. I was already quite familiar with drawing circles mathematically so that wasn't necessarily a challenge. However, when I first wanted `circleVertices` to update the # of vertices used to draw circles dynamically, I called `display()`. I found out that this was bad practice after asking Gemini if that's what I should do. I found the function `glutPostRedisplay()` so as to alert GLUT that a redraw needs to happen. Calling `display()`, which is already bound to a callback, could cause issues.
