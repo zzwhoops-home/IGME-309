@@ -39,4 +39,7 @@ void drawFilledCircle(float red, float green, float blue, float center_x, float 
 /// <param name="lineWidth">Width of wireframe line</param>
 void drawWireframeCircle(float red, float green, float blue, float center_x, float center_y, float radius, float lineWidth);
 
+
 void drawArc(float red, float green, float blue, float center_x, float center_y, float radius, float lineWidth, float arcStart, float arcEnd);
+
+void drawRect(float red, float green, float blue, float start_x, float start_y, float end_x, float end_y, float lineWidth);

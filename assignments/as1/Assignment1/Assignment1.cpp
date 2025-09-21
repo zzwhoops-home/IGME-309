@@ -100,6 +100,12 @@ void display()
     drawFilledCircle(0.2, 0.2, 0.2, 3.95, 3.15, 0.5); // left inner paw
     drawFilledCircle(0.2, 0.2, 0.2, 6.05, 3.15, 0.5); // right inner paw
 
+    // angry frown
+    drawArc(0.0, 0.0, 0.0, 5.0, 5.0, 0.5, 12.0, -0.5, M_PI + 0.5);
+
+    // angry
+    drawRect(0.0, 0.0, 0.0, 6.0, 7.9, 5.1, 6.8, 20.0); //left 
+    drawRect(0.0, 0.0, 0.0, 4.0, 7.9, 4.9, 6.8, 20.0); // right
     // END PANDA DRAWING
 
     glutSwapBuffers();
