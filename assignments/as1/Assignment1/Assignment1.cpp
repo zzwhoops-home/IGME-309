@@ -75,14 +75,30 @@ void display()
     drawWireframeCircle(0.0, 0.0, 0.0, 5.85, 6.65, 0.3, 1.5); // right pupil
     drawFilledCircle(0.8, 0.0, 0.0, 4.15, 6.65, 0.25); // inner left pupil
     drawFilledCircle(0.8, 0.0, 0.0, 5.85, 6.65, 0.25); // inner right pupil
+    drawFilledCircle(1.0, 1.0, 1.0, 4.25, 6.75, 0.12); // left top inner pupil highlight
+    drawFilledCircle(1.0, 1.0, 1.0, 5.75, 6.75, 0.12); // right top inner pupil highlight
+    drawFilledCircle(1.0, 1.0, 1.0, 4.0, 6.5, 0.06); // left bottom inner pupil highlight
+    drawFilledCircle(1.0, 1.0, 1.0, 6.0, 6.5, 0.06); // right bottom inner pupil highlight
 
     // hands
-    drawFilledCircle(0.8, 0.0, 0.0, 5.9, 4.5, 0.5); // left hand
-    drawFilledCircle(0.8, 0.0, 0.0, 4.1, 4.5, 0.5); // right hand
+    drawFilledCircle(1.0, 0.0, 0.8, 5.9, 4.5, 0.5); // left hand
+    drawFilledCircle(1.0, 0.0, 0.8, 4.1, 4.5, 0.5); // right hand
+    drawFilledCircle(0.8, 0.8, 0.8, 5.9, 4.5, 0.35); // left inner hand
+    drawFilledCircle(0.8, 0.8, 0.8, 4.1, 4.5, 0.35); // right inner hand
+
+    // claws
+    drawFilledCircle(0.0, 0.0, 0.0, 4.1, 4.91, 0.1); // left hand, middle claw
+    drawFilledCircle(0.0, 0.0, 0.0, 4.35, 4.85, 0.1); // left hand, left claw
+    drawFilledCircle(0.0, 0.0, 0.0, 3.85, 4.85, 0.1); // left hand, right claw
+    drawFilledCircle(0.0, 0.0, 0.0, 5.9, 4.91, 0.1); // right hand, middle claw
+    drawFilledCircle(0.0, 0.0, 0.0, 5.65, 4.85, 0.1); // right hand, left claw
+    drawFilledCircle(0.0, 0.0, 0.0, 6.15, 4.85, 0.1); // right hand, right claw
 
     // feet
-    drawFilledCircle(0.8, 0.0, 0.0, 6.2, 3.25, 0.7); // left foot
-    drawFilledCircle(0.8, 0.0, 0.0, 3.8, 3.25, 0.7); // right foot
+    drawFilledCircle(0.12, 0.0, 0.8, 6.2, 3.25, 0.7); // left foot
+    drawFilledCircle(0.12, 0.0, 0.8, 3.8, 3.25, 0.7); // right foot
+    drawFilledCircle(0.2, 0.2, 0.2, 3.95, 3.15, 0.5); // left inner paw
+    drawFilledCircle(0.2, 0.2, 0.2, 6.05, 3.15, 0.5); // right inner paw
 
     // END PANDA DRAWING
 
