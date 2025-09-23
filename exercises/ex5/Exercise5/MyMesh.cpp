@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <time.h>
+#include <string>
 using namespace std;
 
 MyMesh::MyMesh()
@@ -47,7 +48,54 @@ void MyMesh::load(char *fileName)
 
 	/****************************************/
 	// Write your code below
-	
+
+	// store strings read
+	string line;
+	string delimiter = " ";
+
+	while (getline(file, line)) {
+		char type = line[0];
+
+		// find next two values, space separated, assuming index 2 begins string
+		string values = line.substr(2);
+
+		if (type == 'v') {
+			// get next space to split
+			int nextSpace = values.find(delimiter);
+
+			// get substrings of coords
+			float x = stof(values.substr(0, nextSpace));
+			float y = stof(values.substr(nextSpace));
+
+			vertices[vertNum] = x;
+			vertices[vertNum + 1] = y;
+
+			// update index
+			vertNum += 2;
+		}
+		else if (type == 'f') {
+			// better solution is with while loop
+			size_t curSpace = 0;
+			size_t nextSpace = 0;
+
+			for (int i = 0; i < 2; i++) {
+				curSpace = values.find(delimiter);
+				nextSpace = values.find(values.substr(curSpace));
+
+				// either we're still in the middle or at the end of the string
+				if (nextSpace != string::npos) {
+					int index = stoi(values.substr());
+					indices[triNum] = stoi(values.substr(curSpace, nextSpace));
+				}
+				else {
+					indices[triNum] = stoi(values.substr(curSpace));
+				}
+
+			}
+			// increase index by 3
+			triNum += 3;
+		}
+	}
 	// Write your code above
 	/****************************************/
 
