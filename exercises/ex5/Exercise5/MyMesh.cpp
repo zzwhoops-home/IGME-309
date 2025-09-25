@@ -65,7 +65,7 @@ void MyMesh::load(char *fileName)
 
 			// get substrings of coords
 			float x = stof(values.substr(0, nextSpace));
-			float y = stof(values.substr(nextSpace));
+			float y = stof(values.substr(nextSpace + delimiter.length()));
 
 			vertices[vertNum] = x;
 			vertices[vertNum + 1] = y;
@@ -75,25 +75,26 @@ void MyMesh::load(char *fileName)
 		}
 		else if (type == 'f') {
 			// better solution is with while loop
-			size_t curSpace = 0;
-			size_t nextSpace = 0;
+			size_t curPos = 0;
+			string token;
+			int index = 0;
 
-			for (int i = 0; i < 2; i++) {
-				curSpace = values.find(delimiter);
-				nextSpace = values.find(values.substr(curSpace));
+			while ((curPos = values.find(delimiter)) != string::npos) {
+				// get up to next space
+				token = values.substr(0, curPos);
 
-				// either we're still in the middle or at the end of the string
-				if (nextSpace != string::npos) {
-					int index = stoi(values.substr());
-					indices[triNum] = stoi(values.substr(curSpace, nextSpace));
-				}
-				else {
-					indices[triNum] = stoi(values.substr(curSpace));
-				}
+				indices[triNum * 3 + index] = stoi(token) - 1;
+				index++;
 
+				// erase part of string that we already dealt with
+				values.erase(0, curPos + delimiter.length());
 			}
-			// increase index by 3
-			triNum += 3;
+
+			// add last token (remaining character/string)
+			indices[triNum * 3 + index] = stoi(values) - 1;
+
+			// we've added a tri
+			triNum++;
 		}
 	}
 	// Write your code above
