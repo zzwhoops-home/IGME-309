@@ -25,6 +25,16 @@ MyMesh::~MyMesh()
 	// Write code below
 	// Delete GPU buffers
 
+	if (vboVerts) {
+		glDeleteBuffers(1, &vboVerts);
+	}
+	if (vboColors) {
+		glDeleteBuffers(1, &vboColors);
+	}
+	if (iboElems) {
+		glDeleteBuffers(1, &iboElems);
+	}
+
 	// Write code above
 	// ********************************************************
 }
@@ -73,6 +83,27 @@ void MyMesh::createOrUpdateGPU()
 	// Write code below
 	// Create buffers
 
+	// VBO verts
+	glGenBuffers(1, &vboVerts);
+	glBindBuffer(GL_ARRAY_BUFFER, vboVerts);
+	glBufferData(GL_ARRAY_BUFFER, vertNum * 2, vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0); // unbind
+	delete[] vertices; //cleanup
+
+	// VBO colors
+	glGenBuffers(1, &vboColors);
+	glBindBuffer(GL_ARRAY_BUFFER, vboColors);
+	glBufferData(GL_ARRAY_BUFFER, vertNum * 3, vertColors, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0); // unbind
+	delete[] vertColors; // clenaup
+
+	// IBO elements
+	glGenBuffers(1, &iboElems);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboElems);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, triNum * 3, indices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // unbind
+	delete[] indices; // cleanup
+
 	// Write code above
 	// ********************************************************
 }
@@ -91,6 +122,8 @@ void MyMesh::draw()
 	// ********************************************************
 	// Write code below
 	// Draw shape with buffer data
+
+
 
 	// Write code above
 	// ********************************************************

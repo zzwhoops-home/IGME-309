@@ -1,10 +1,3 @@
-
-#ifdef __APPLE__
-#include <GLUT/glut.h>
-#else
-#include <GL/freeglut.h>
-#endif
-
 #include "test_2D_Data.h"
 #include "MyMesh.h"
 
