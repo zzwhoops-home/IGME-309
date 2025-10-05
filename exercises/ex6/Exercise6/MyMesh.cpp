@@ -86,23 +86,20 @@ void MyMesh::createOrUpdateGPU()
 	// VBO verts
 	glGenBuffers(1, &vboVerts);
 	glBindBuffer(GL_ARRAY_BUFFER, vboVerts);
-	glBufferData(GL_ARRAY_BUFFER, vertNum * 2, vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertNum * 2, vertices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0); // unbind
-	delete[] vertices; //cleanup
 
 	// VBO colors
 	glGenBuffers(1, &vboColors);
 	glBindBuffer(GL_ARRAY_BUFFER, vboColors);
-	glBufferData(GL_ARRAY_BUFFER, vertNum * 3, vertColors, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertNum * 3, vertColors, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0); // unbind
-	delete[] vertColors; // clenaup
 
 	// IBO elements
 	glGenBuffers(1, &iboElems);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboElems);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, triNum * 3, indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * triNum * 3, indices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // unbind
-	delete[] indices; // cleanup
 
 	// Write code above
 	// ********************************************************
@@ -123,7 +120,17 @@ void MyMesh::draw()
 	// Write code below
 	// Draw shape with buffer data
 
+	glBindBuffer(GL_ARRAY_BUFFER, vboVerts);
+	glVertexPointer(2, GL_FLOAT, 0, NULL);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+	glBindBuffer(GL_ARRAY_BUFFER, vboColors);
+	glColorPointer(3, GL_FLOAT, 0, NULL);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboElems);
+	glDrawElements(GL_TRIANGLES, triNum, GL_UNSIGNED_INT, NULL);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	// Write code above
 	// ********************************************************
