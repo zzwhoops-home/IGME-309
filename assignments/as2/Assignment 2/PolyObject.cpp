@@ -37,11 +37,25 @@ unsigned int PolyObject::getVertNum()
 
 void PolyObject::draw()
 {
-	glBegin(GL_POLYGON);
+	int verts = getVertNum();
 
-	// draw a line 
+	// draw a single point
+	if (verts == 1) {
+		glBegin(GL_POINTS);
+
+	}
+	// draw a line
+	else if (verts == 2) {
+		glBegin(GL_LINES);
+	}
+	// draw a polygon
+	else if (verts > 2) {
+		glBegin(GL_POLYGON);
+	}
+
+	// iterate through vertices
 	for (int i = 0; i < getVertNum(); i++) {
-		glVertex2fv(vertices.data() + i * 2);
+		glVertex2fv(vertices.data() + (i * 2));
 	}
 
 	glEnd();
@@ -57,13 +71,18 @@ void PolyObject::unfinishedDraw(float* mousePos)
 		glBegin(GL_LINE_STRIP);
 
 		glVertex2fv(vertices.data());
-		glVertex2fv(mousePos);
-
-		glEnd();
 	}
 	// draw polygon extending to mouse position
 	else if (verts > 1)
 	{
-
+		glBegin(GL_POLYGON);
+		
+		for (int i = 0; i < verts; i++) {
+			glVertex2fv(vertices.data() + (i * 2));
+		}
 	}
+
+	// extend to mouse pos
+	glVertex2fv(mousePos);
+	glEnd();
 }

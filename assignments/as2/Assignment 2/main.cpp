@@ -15,8 +15,8 @@ float canvasWidth, canvasHeight;
 // user mouse position
 float mousePos[2];
 
-vector<PolyObject> polyObjects;
-PolyObject curObj;
+vector<PolyObject*> polyObjects;
+PolyObject* curObj;
 
 void init(void)
 {
@@ -28,8 +28,8 @@ void init(void)
     canvasHeight = 10.0f;
 
     // create initial polyobject & init array
-    curObj = PolyObject();
-    polyObjects = vector<PolyObject>();
+    curObj = new PolyObject();
+    polyObjects = vector<PolyObject*>();
 }
 
 void drawCursor()
@@ -68,9 +68,12 @@ void display()
     glClear(GL_COLOR_BUFFER_BIT);
     
     // draw current poly objects
-    for (PolyObject& obj : polyObjects) {
-        obj.draw();
+    for (PolyObject* obj : polyObjects) {
+        obj->draw();
     }
+
+    // draw current object over top
+    curObj->unfinishedDraw(mousePos);
 
     // draw cursor on top
     drawCursor();
@@ -80,7 +83,7 @@ void display()
 
 void mouse(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        cout << "Left click pressed" << endl;
+        curObj->addVertex(mousePos[0], mousePos[1]);
     }
     else if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
         cout << "Right click pressed" << endl;
@@ -96,14 +99,41 @@ void motion(int x, int y) {
     glutPostRedisplay();
 }
 
+void cleanup() {
+    // clean up every single vector element
+    for (PolyObject* obj : polyObjects) {
+        delete obj;
+    }
+
+    // good practice or whatever
+    polyObjects.clear();
+    
+    // clean current object if it hasn't been added/deleted already
+    if (curObj != nullptr) {
+        delete curObj;
+        curObj = nullptr;
+    }
+}
+
+void endCurShape() {
+    // add to vector of all objects
+    polyObjects.push_back(curObj);
+
+    // create new object
+    curObj = new PolyObject();
+}
+
 void keyboard(unsigned char key, int x, int y) {
     switch (key) {
     // esc leaves game
     case 27:
+        // cleanup heap memory
+        cleanup();
         exit(0);
         break;
     case 13:
-        cout << "Enter pressed, shape should be completed " << endl;
+        // close shape
+        endCurShape();
         break;
     }
 }
