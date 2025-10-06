@@ -9,32 +9,45 @@
 #include "PolyObject.h"
 
 // the window's width and height
-int width, height;
+int rasterWidth, rasterHeight;
 float canvasWidth, canvasHeight;
 
+// user mouse position
+float mousePos[2];
+
 vector<PolyObject> polyObjects;
+PolyObject curObj;
 
 void init(void)
 {
     // initialize the size of the window
-    width = 600;
-    height = 600;
+    rasterWidth = 600;
+    rasterHeight = 600;
 
     canvasWidth = 10.0f;
     canvasHeight = 10.0f;
 
     // create initial polyobject & init array
-    PolyObject obj = PolyObject();
+    curObj = PolyObject();
     polyObjects = vector<PolyObject>();
-    polyObjects.push_back(obj);
+}
+
+void drawCursor()
+{
+    glColor3f(0.1f, 0.5f, 1.0f);
+    glPointSize(10.0f);
+    glBegin(GL_POINTS);
+    glVertex2fv(mousePos);
+    glEnd();
+    glPointSize(1.0f);
 }
 
 // called when window is first created or when window is resized
 void reshape(int w, int h)
 {
     // update the screen dimensions
-    width = w;
-    height = h;
+    rasterWidth = w;
+    rasterHeight = h;
 
     // do an orthographic parallel projection, limited by screen/window size
     glMatrixMode(GL_PROJECTION);
@@ -42,7 +55,7 @@ void reshape(int w, int h)
     gluOrtho2D(0.0, canvasWidth, 0.0, canvasHeight);
 
     /* tell OpenGL to use the whole window for drawing */
-    glViewport(0, 0, (GLsizei)width, (GLsizei)height);
+    glViewport(0, 0, (GLsizei)rasterWidth, (GLsizei)rasterHeight);
 
     glutPostRedisplay();
 }
@@ -53,6 +66,14 @@ void display()
 
     // wipe the entire color buffer to the current clear color.
     glClear(GL_COLOR_BUFFER_BIT);
+    
+    // draw current poly objects
+    for (PolyObject& obj : polyObjects) {
+        obj.draw();
+    }
+
+    // draw cursor on top
+    drawCursor();
 
     glutSwapBuffers();
 }
@@ -66,6 +87,15 @@ void mouse(int button, int state, int x, int y) {
     }
 }
 
+void motion(int x, int y) {
+    // mouse events are handled by OS, eventually. When using mouse in the raster window, it assumes top-left is the origin.
+    // Note: the raster window created by GLUT assumes bottom-left is the origin.
+    mousePos[0] = (float)x / rasterWidth * canvasWidth;
+    mousePos[1] = (float)(rasterHeight - y) / rasterHeight * canvasHeight;
+
+    glutPostRedisplay();
+}
+
 void keyboard(unsigned char key, int x, int y) {
     switch (key) {
     // esc leaves game
@@ -73,7 +103,7 @@ void keyboard(unsigned char key, int x, int y) {
         exit(0);
         break;
     case 13:
-        cout << "Enter pressed " << endl;
+        cout << "Enter pressed, shape should be completed " << endl;
         break;
     }
 }
@@ -87,7 +117,7 @@ int main(int argc, char** argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 
     // set the initial window size */
-    glutInitWindowSize((int)width, (int)height);
+    glutInitWindowSize((int)rasterWidth, (int)rasterHeight);
 
     glutCreateWindow("Assignment 2!");
 
@@ -100,6 +130,10 @@ int main(int argc, char** argv)
 
     // register function that draws in the window
     glutDisplayFunc(display);
+
+    // mouse movement + invisible cursor
+    glutSetCursor(GLUT_CURSOR_NONE);
+    glutPassiveMotionFunc(motion);
 
     glutMainLoop();
     return 0;
