@@ -35,11 +35,9 @@ void init(void)
 void drawCursor()
 {
     glColor3f(0.1f, 0.5f, 1.0f);
-    glPointSize(10.0f);
     glBegin(GL_POINTS);
     glVertex2fv(mousePos);
     glEnd();
-    glPointSize(1.0f);
 }
 
 // called when window is first created or when window is resized
@@ -164,6 +162,10 @@ int main(int argc, char** argv)
     // mouse movement + invisible cursor
     glutSetCursor(GLUT_CURSOR_NONE);
     glutPassiveMotionFunc(motion);
+
+    // default sizes
+    glPointSize(10.0f);
+    glLineWidth(3.0f);
 
     glutMainLoop();
     return 0;

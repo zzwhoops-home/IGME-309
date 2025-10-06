@@ -42,7 +42,6 @@ void PolyObject::draw()
 	// draw a single point
 	if (verts == 1) {
 		glBegin(GL_POINTS);
-
 	}
 	// draw a line
 	else if (verts == 2) {
