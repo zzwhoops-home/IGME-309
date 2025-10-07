@@ -9,12 +9,12 @@
 PolyObject::PolyObject()
 {
 	this->vertices = vector<float>();
-	this->color = new float(3);
+	this->color = new float[3];
 }
 
 PolyObject::~PolyObject()
 {
-	delete[] color;
+	delete[] this->color;
 }
 
 void PolyObject::addVertex(float x, float y)
@@ -38,6 +38,9 @@ unsigned int PolyObject::getVertNum()
 void PolyObject::draw()
 {
 	int verts = getVertNum();
+
+	// set color
+	glColor3fv(this->color);
 
 	// draw a single point
 	if (verts == 1) {
@@ -63,6 +66,9 @@ void PolyObject::draw()
 void PolyObject::unfinishedDraw(float* mousePos)
 {
 	int verts = getVertNum();
+
+	// set color
+	glColor3fv(this->color);
 
 	// draw line from first pt to next 
 	if (verts == 1)

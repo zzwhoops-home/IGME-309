@@ -2,5 +2,6 @@
 
 This assignment was quite interesting, I learned a lot about basic drawing with OpenGL and how this could be used as a platform for development. I used the provided `interactiveTriangle.cpp` file to help guide the coding process, especially to find the callback functions which could update a live mouse position and detect mouse clicks. It helped to use this resource: [glBegin docs](https://registry.khronos.org/OpenGL-Refpages/gl2.1/xhtml/glBegin.xml).
 
-You could try using unique ptrs for heap cleanup
-Probably would help to increase point size
+I was able to implement every requirement including several extra colors (orange, yellow, purple, and violet) by adding onto the code in the menu. An improvement I also made to the code was to restructure the `menu()` function to set the colors in a switch statement, then set the color of the object being drawn and call the `glutPostRedisplay()` function in one go. This is because I'd otherwise be repeating two lines a 6 different times for each of the color cases.
+
+To be verbose, I implemented a point, line or polygon drawing tool. What you draw remains on the screen, and drawings can be made by clicking as many times as you want to add vertices. Pressing "enter" finishes the current drawing and adds a shape to the background. Right-clicking opens up a menu, in which you can choose to clear the screen and start again, exit the program, or change the color you are drawing with. You may change the color while you're drawing or before you draw a shape. "Esc" also serves the same purpose as right-clicking > exit.
