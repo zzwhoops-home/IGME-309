@@ -1,5 +1,7 @@
 # Exercise 6: VBO, IBO, Draw Methods
 
-Intro
+To do this exercise, I looked at two files: `demo_vbo_ibo.cpp` and `demo_buffer_objects.cpp`. They helped me understand where to place certain function calls and also helped me develop my intuition for the process of drawing from a buffer. At first, I had problems getting anything to display at all. There were some fixes that I need to implement, for example adding `sizeof(type)` in the calculation of size, not just `vertNum * 3`. When I first called `glVertexPointer()`, I had a `size` parameter of 3, which doesn't make sense because we're drawing in 2D, so we should be reading in sets of 3 points.
 
 One takeaway I learned from doing this assignment was how `GL_STATIC_DRAW` works. I just wasn't really sure what the point of it was, but I looked it up and I found that `GL_STATIC_DRAW` has two other alternatives, `GL_STREAM_DRAW` and `GL_DYNAMIC_DRAW`, which concern how the data may be modified and udpated. The idea is that this will alert the system to do what it thinks will be most "optimized". `GL_STATIC_DRAW`, specifically, is essentially saying that we will load vertex data once and never modify it.
+
+I also was curious what `glVertexPointer` did, and searching online confirmed my suspicion that it was essentially the "chunk size" in reading in coordinates, as well as the data type to expect, stride (like strides over data), and the first element pointer.
