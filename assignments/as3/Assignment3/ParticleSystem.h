@@ -29,8 +29,6 @@ private:
 	// color ranges
 	float minRGB = 0.0f;
 	float maxRGB = 1.0f;
-	float minAlpha = 0.4f;
-	float maxAlpha = 1.0f;
 
 public:
 	ParticleSystem(int _numParticles);

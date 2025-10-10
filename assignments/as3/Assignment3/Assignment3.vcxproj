@@ -19,14 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\..\Downloads\A03-Template\A03-Template\Camera.cpp" />
-    <ClCompile Include="..\..\..\..\..\..\Downloads\A03-Template\A03-Template\main.cpp" />
-    <ClCompile Include="..\..\..\..\..\..\Downloads\A03-Template\A03-Template\ParticleSystem.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="ParticleSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\..\Downloads\A03-Template\A03-Template\Camera.h" />
-    <ClInclude Include="..\..\..\..\..\..\Downloads\A03-Template\A03-Template\ParticleSystem.h" />
-    <ClInclude Include="..\..\..\..\..\..\Downloads\A03-Template\A03-Template\Text.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="ParticleSystem.h" />
+    <ClInclude Include="Text.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

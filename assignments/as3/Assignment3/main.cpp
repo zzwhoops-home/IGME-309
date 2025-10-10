@@ -7,6 +7,8 @@
 #include <GL/freeglut.h>
 #endif
 
+#include <cmath>
+
 #include "Camera.h"
 #include "Text.h"
 #include "ParticleSystem.h"
@@ -17,6 +19,12 @@ using namespace std;
 int g_winWidth = 1024;
 int g_winHeight = 512;
 
+int particles = 5000;
+
+int maxFrames = 20;
+int fpsTracker[20];
+int frameUpdate = -3;
+
 Camera g_cam;
 Text g_text;
 unsigned char g_keyStates[256];
@@ -25,7 +33,7 @@ unsigned char g_keyStates[256];
 
 // Particle system object
 // You can pass different numbers of particles into the constructor of the particle system object
-ParticleSystem g_particles = ParticleSystem(5000);
+ParticleSystem g_particles = ParticleSystem(particles);
 
 /*************************************************/
 
@@ -66,6 +74,32 @@ void initialGL()
 	glLoadIdentity();
 }
 
+void calcStats() {
+	cout << "Stats for " << maxFrames << " frames:" << endl;
+
+	int sum = 0;
+	for (int i = 0; i < maxFrames; i++) {
+		sum += fpsTracker[i];
+	}
+	float mean = (float)sum / maxFrames;
+
+	int sxx = 0;
+	for (int i = 0; i < maxFrames; i++) {
+		sxx += pow(fpsTracker[i] - mean, 2);
+	}
+
+	float sampleStdDev = std::sqrt((float)sxx / (maxFrames - 1));
+
+	// t-test w/ n - 1 = 19, alpha = 0.05 -> 2.09302
+	// ME = t * SE = t * s / sqrt(n)
+	float confInvRange = 2.09302 * (sampleStdDev / std::sqrt(maxFrames));
+	float minRange = mean - confInvRange;
+	float maxRange = mean + confInvRange;
+	cout << "Mean = " << mean << " += " << confInvRange << endl;
+	cout << "Sample Standard Deviation " << sampleStdDev << endl;
+	cout << "95% CI: (" << minRange << ", " << maxRange << ")" << endl;
+}
+
 void idle()
 {
 	curTime = glutGet(GLUT_ELAPSED_TIME); // returns the number of milliseconds since glutInit() was called.
@@ -78,6 +112,14 @@ void idle()
 		elapsedTime = 0.0f;
 		fps = frameCount;
 		frameCount = 0;
+
+		if (frameUpdate < maxFrames && frameUpdate >= 0) {
+			fpsTracker[frameUpdate] = fps;
+		}
+		else if (frameUpdate == maxFrames) {
+			calcStats();
+		}
+		frameUpdate++;
 	}
 
 	// update particle system

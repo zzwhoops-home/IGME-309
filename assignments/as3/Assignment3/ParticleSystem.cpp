@@ -14,9 +14,6 @@ ParticleSystem::ParticleSystem(int _numParticles)
 	lifeTimes = new float[numParticles];
 
 	for (int i = 0; i < numParticles; i++) {
-		// Initialize the life times
-		lifeTimes[i] = maxLifeTime - maxLifeTime * i / numParticles;
-
 		/***************************/
 		// Write your code below
 		// Please add initializations for other arrays as you see appropriate.
@@ -28,6 +25,9 @@ ParticleSystem::ParticleSystem(int _numParticles)
 }
 
 void ParticleSystem::reset(int i) {
+	// initialize lifetime
+	lifeTimes[i] = maxLifeTime - maxLifeTime * i / numParticles;
+	
 	positions[i * 3] = positions[i * 3 + 1] = positions[i * 3 + 2] = 0.0f; // x, y, and z are initially 0
 
 	velocities[i * 3] = getRandomValue(minSpeedX, maxSpeedX);		// initial x velocity
@@ -37,7 +37,6 @@ void ParticleSystem::reset(int i) {
 	colors[i * 4] = getRandomValue(minRGB, maxRGB);					// initial color r
 	colors[i * 4 + 1] = getRandomValue(minRGB, maxRGB);				// initial color g
 	colors[i * 4 + 2] = getRandomValue(minRGB, maxRGB);				// initial color b
-	colors[i * 4 + 3] = getRandomValue(minAlpha, maxAlpha);			// initial color a
 }
 
 void ParticleSystem::update(float deltaTime)
@@ -48,16 +47,23 @@ void ParticleSystem::update(float deltaTime)
 		// Update lifetime, velocity, position, and color.
 		// Reset particle states (positions, velocities, colors, and lifetimes) when the lifetime reaches the maxLifeTime
 		
+		lifeTimes[i] += deltaTime;
+
 		// check end of life, reset to original pos if so
 		if (lifeTimes[i] >= maxLifeTime) {
 			reset(i);
 		}
 
-		// update position
-		positions[i * 3] = 0.0f;
+		// update position: rate (velocity x, y or z) times time (deltaTime)
+		positions[i * 3] += deltaTime * velocities[i * 3];
+		positions[i * 3 + 1] += deltaTime * velocities[i * 3 + 1];
+		positions[i * 3 + 2] += deltaTime * velocities[i * 3 + 2];
 
-		// increase y velocity from gravity
-		velocities[i * 3 + 1] = 0.0f;
+		// increase y velocity from gravity, keep others the same
+		velocities[i * 3 + 1] += deltaTime * acceleration[1];
+
+		// update color to reflect lifetime
+		colors[i * 4 + 3] = 1 - (lifeTimes[i] / maxLifeTime);		// a value for rgba
 		
 		// Write your code above
 		/***************************/
@@ -69,8 +75,15 @@ void ParticleSystem::draw()
 	/***************************/
 	// Write your code below
 	// Use GL_POINTS for rendering
+	glPointSize(3.0f);
+	
 	glBegin(GL_POINTS);
 	
+	for (int i = 0; i < numParticles; i++) {
+		glColor4fv(colors + (i * 4));
+		glVertex3fv(positions + (i * 3));
+	}
+
 	glEnd();
 	// Write your code above
 	/***************************/
