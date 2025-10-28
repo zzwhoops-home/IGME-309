@@ -12,7 +12,7 @@
 #include <math.h>
 using namespace std;
 
-#define MAX_NUM_CIRCLE 7
+#define NUM_SHAPES 16
 #define CIRCLE_RADIUM 2.0
 
 int win_width = 600, win_height = 600;
@@ -21,19 +21,60 @@ float canvas_width = 20.0f; float canvas_height = 20.0f;
 
 bool keyStates[256];
 int buttonState;
-float colors[3 * MAX_NUM_CIRCLE];
-float translations[2 * MAX_NUM_CIRCLE];
-float rotations[MAX_NUM_CIRCLE];
+
+int totalShapes = 0;
+float shapes[4 * NUM_SHAPES];
+float colors[3 * NUM_SHAPES];
+float translations[2 * NUM_SHAPES];
+float rotations[NUM_SHAPES];
 
 float curMouse[2];
 float preMouse[2];
+
+void addRectToShapes(float x, float y, float w, float h)
+{
+    shapes[totalShapes * 4] = x;
+    shapes[totalShapes * 4 + 1] = y;
+    shapes[totalShapes * 4 + 2] = w;
+    shapes[totalShapes * 4 + 3] = h;
+    totalShapes++;
+}
 
 void init(void)
 {
     for (int i = 0; i < 256; i++) {
         keyStates[i] = false;
     }
-    for (int i = 0; i < MAX_NUM_CIRCLE; i++) {
+
+    // torso is center (first transform)
+    addRectToShapes(0.0, 0.0, 4.0, 2.0);
+
+    // chest connected to torso (2nd transform)
+    addRectToShapes(0.0, 0.0, 3.0, 2.0);
+
+    // neck to chest
+    addRectToShapes(0.0, 0.0, 0.5, 1.0);
+
+    // head to neck
+    addRectToShapes(0.0, 0.0, 2.0, 2.0);
+
+    // l upper arm to chest
+    // l lower arm to l upper arm
+    // l hand to l lower arm
+
+    // r upper arm to chest
+    // r lower arm to r upper arm
+    // r hand to r lower arm
+
+    // l upper leg to torso
+    // l lower leg to l upper leg
+    // l foot to l lower leg
+
+    // u upper leg to torso
+    // u lower leg to u upper leg
+    // u foot to u lower leg
+
+    for (int i = 0; i < NUM_SHAPES; i++) {
         colors[i * 3 + 0] = 0.0f; // red
         colors[i * 3 + 1] = 0.0f; // green
         colors[i * 3 + 2] = 0.0f; // blue
@@ -57,12 +98,13 @@ void drawCircle(float radius, const float* c)
     glEnd();
 }
 
-// 1 is top-left corner
-void drawRect(float x, float y, float width, float height, const float* colors)
+// from top-left corner
+void drawRect(float x, float y, float width, float height)
 {
-    glColor3fv(colors);
+    //glColor3fv(colors);
+    glColor3f(0.0, 0.0, 0.0);
     glLineWidth(3.0f);
-    glBegin(GL_QUADS);
+    glBegin(GL_LINE_LOOP);
         glVertex2f(x, y);
         glVertex2f(x + width, y);
         glVertex2f(x + width, y + height);
@@ -78,8 +120,33 @@ void display(void)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // torso is center
+    // torso is center (first transform)
+    drawRect(0.0f, 0.0f, 4.0f, 2.0f);
 
+    // chest connected to torso (2nd transform)
+    drawRect(0.0f, 0.0f, 3.0f, 2.0f);
+    
+    // neck to chest
+    drawRect(0.0f, 0.0f, 0.5f, 1.0f);
+    
+    // head to neck
+    drawRect(0.0f, 0.0f, 2.0f, 2.0f);
+
+    // l upper arm to chest
+    // l lower arm to l upper arm
+    // l hand to l lower arm
+
+    // r upper arm to chest
+    // r lower arm to r upper arm
+    // r hand to r lower arm
+
+    // l upper leg to torso
+    // l lower leg to l upper leg
+    // l foot to l lower leg
+
+    // u upper leg to torso
+    // u lower leg to u upper leg
+    // u foot to u lower leg
 
 
     // the following codes could be written in a for loop.
