@@ -33,13 +33,32 @@ float rotations[NUM_SHAPES];
 float curMouse[2];
 float preMouse[2];
 
-void addRectToShapes(float localX, float localY, float w, float h, float translateX, float translateY)
+void addRectToShapes(float localX, float localY, float w, float h, char type)
 {
     shapes[totalShapes * 4 + 0] = localX;
     shapes[totalShapes * 4 + 1] = localY;
     shapes[totalShapes * 4 + 2] = w;
     shapes[totalShapes * 4 + 3] = h;
 
+    float translateX = 0.0f; float translateY = 0.0f;
+
+    switch (type) {
+    // anchor point on bottom
+    case 'b':
+        translateX = -w / 2;
+        break;
+    case 'l':
+        translateY = -h / 2;
+        break;
+    case 'r':
+        translateY = -h / 2;
+        translateX = -w;
+        break;
+    case 't':
+        translateX = -w / 2;
+        translateY = -h;
+        break;
+    }
     translations[totalShapes * 2 + 0] = translateX;
     translations[totalShapes * 2 + 1] = translateY;
 
@@ -79,44 +98,35 @@ void init(void)
 
     int i = 0;
     // torso is center (first transform)
-    addRectToShapes(0.0, 0.0, 3.0, 2.0, 0.0, 0.0);
+    addRectToShapes(0.0, 0.0, 3.0, 2.0, 'b');
 
     // chest connected to torso (2nd transform)
-    addRectToShapes(0.0, 0.0, 4.0, 2.0, 0.0, 2.0);
+    addRectToShapes(0.0, 2.0, 4.0, 2.0, 'b');
 
     // neck to chest
-    addRectToShapes(0.0, 0.0, 0.5, 1.0, 0.0, 2.0);
+    addRectToShapes(0.0, 2.0, 0.5, 1.0, 'b');
 
     // head to neck
-    addRectToShapes(0.0, 0.0, 2.0, 2.0, 0.0, 1.0);
+    addRectToShapes(0.0, 1.0, 2.0, 2.0, 'b');
 
     // l upper arm to chest
-    addRectToShapes(0.0, 0.0, 1.8, 0.7, 2.0, 1.0);
+    addRectToShapes(3.0, 0.0, 2.0, 0.7, 'l');
     // l lower arm to l upper arm
-    addRectToShapes(0.0, 0.0, 1.8, 0.7, 1.8, 0.0);
+    addRectToShapes(2.0, 0.0, 2.0, 0.7, 'l');
     // l hand to l lower arm
-    addRectToShapes(0.0, 0.0, 1.3, 1.5, 1.8, 0.0);
+    addRectToShapes(2.0, 0.0, 1.5, 0.7, 'l');
 
     // r upper arm to chest
-    addRectToShapes(0.0, 0.0, 1.8, 0.7, -2.0, 1.0);
     // r lower arm to r upper arm
-    addRectToShapes(0.0, 0.0, 1.8, 0.7, -1.8, 0.0);
     // r hand to r lower arm
-    addRectToShapes(0.0, 0.0, 1.3, 1.5, -1.8, 0.0);
 
     // l upper leg to torso
-    addRectToShapes(0.0, 0.0, 0.8, 3.0, -0.6, 0.0);
     // l lower leg to l upper leg
-    addRectToShapes(0.0, 0.0, 0.8, 3.0, 0.0, -3.0);
     // l foot to l lower leg
-    addRectToShapes(0.0, 0.0, 1.0, 1.0, 0.0, -3.0);
 
     // u upper leg to torso
-    addRectToShapes(0.0, 0.0, 0.8, 3.0, 0.6, 0.0);
     // u lower leg to u upper leg
-    addRectToShapes(0.0, 0.0, 0.8, 3.0, 0.0, -3.0);
     // u foot to u lower leg
-    addRectToShapes(0.0, 0.0, 1.0, 1.0, 0.0, -3.0);
 
     buttonState = -1;
 }
@@ -149,28 +159,22 @@ void drawRect(float* shapePtr, float* curColors)
     glEnd();
 }
 
-void drawTransformed(int i, float anchorChar) {
+void drawTransformed(int i) {
+    float x = shapes[i * 4 + 0];
+    float y = shapes[i * 4 + 1];
     float width = shapes[i * 4 + 2];
     float height = shapes[i * 4 + 3];
 
-    glTranslatef(translations[i * 2 + 0], translations[i * 2 + 1], 0.0f);
-    glRotatef(rotations[i], 0.0f, 0.0f, 1.0f);
+    float anchorOffsetX = translations[i * 2 + 0];
+    float anchorOffsetY = translations[i * 2 + 1];
 
-    glPushMatrix();
-    if (anchorChar == 'b') {
-        glTranslatef(-width / 2.0f, 0.0f, 0.0f);
-    }
-    else if (anchorChar == 'l') {
-        glTranslatef(0.0f, -height / 2.0f, 0.0f);
-    }
-    else if (anchorChar == 'r') {
-        glTranslatef(-width, -height / 2.0f, 0.0f);
-    }
-    else if (anchorChar == 't') {
-        glTranslatef(-width / 2.0f, -height, 0.0f);
-    }
+    glTranslatef(x, y, 0.0f);
+
+    glRotatef(rotations[i], 0.0f, 0.0f, 1.0f);
+    
+    glTranslatef(anchorOffsetX, anchorOffsetY, 0.0f);
     drawRect(shapes + (i * 4), colors + (i * 3));
-    glPopMatrix();
+
 }
 
 void display(void)
@@ -181,104 +185,56 @@ void display(void)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // now I could set up a struct to manage children, but let's just do it the dumb hard-coded way 
+    // Translate the entire figure down so it's visible on the 20x20 canvas
+    glTranslatef(0.0f, -5.0f, 0.0f); // Example: Move entire figure down by 5 units
+
     int i = 0;
 
-    // torso is center (first transform)
-    drawTransformed(i, 'b');
+    // --- 1. Torso (Root) ---
     glPushMatrix();
+    drawTransformed(i); // i=0: Torso
 
-    // chest connected to torso (2nd transform)
-    drawTransformed(++i, 'b');
+    // --- 2. Chest (Child of Torso) ---
+    glPushMatrix();
+    drawTransformed(++i); // i=1: Chest
 
-        // neck to chest
-        glPushMatrix();
-            drawTransformed(++i, 'b');
+    // --- 3. Neck and Head Branch (Children of Chest) ---
+    glPushMatrix(); // Save after Chest
+    drawTransformed(++i); // i=2: Neck
+    drawTransformed(++i); // i=3: Head
+    glPopMatrix(); // Restore to Chest's final position before Neck/Head
 
-            // head to neck
-            drawTransformed(++i, 'b');
-        glPopMatrix();
+    // --- 4. Left Arm Branch (Children of Chest) ---
+    glPushMatrix(); // Save after Chest
+    drawTransformed(++i); // i=4: L Upper Arm (connected to chest)
+    drawTransformed(++i); // i=5: L Lower Arm (connected to L Upper Arm)
+    drawTransformed(++i); // i=6: L Hand (connected to L Lower Arm)
+    glPopMatrix(); // Restore to Chest's final position before L Arm
 
-        // l upper arm to chest
-        glPushMatrix();
-            drawTransformed(++i, 'l');
-            // l lower arm to l upper arm
-            drawTransformed(++i, 'l');
-            // l hand to l lower arm
-            drawTransformed(++i, 'l');
-        glPopMatrix();
+    // --- 5. Right Arm Branch (Siblings of Left Arm) ---
+    // NOTE: You haven't initialized these parts in init(), but this is where they would go.
+    /*
+    glPushMatrix();
+        // Add Right Arm parts here (i=7, 8, 9)
+    glPopMatrix();
+    */
 
+    glPopMatrix(); // Restore to Torso's final position
 
-        // r upper arm to chest
-        glPushMatrix();
-            drawTransformed(++i, 'r');
-            // r lower arm to r upper arm
-            drawTransformed(++i, 'r');
-            // r hand to r lower arm
-            drawTransformed(++i, 'r');
-        glPopMatrix();
+    // --- 6. Left Leg Branch (Children of Torso) ---
+    // NOTE: You haven't initialized these parts in init(), but this is where they would go.
+    /*
+    glPushMatrix();
+        // Add Left Leg parts here
     glPopMatrix();
 
-    // l upper leg to torso
+    // --- 7. Right Leg Branch (Children of Torso) ---
     glPushMatrix();
-        drawTransformed(++i, 't');
-        // l lower leg to l upper leg
-        drawTransformed(++i, 't');
-        // l foot to l lower leg
-        drawTransformed(++i, 't');
+        // Add Right Leg parts here
     glPopMatrix();
+    */
 
-    // u upper leg to torso
-    glPushMatrix();
-        drawTransformed(++i, 't');
-        // u lower leg to u upper leg
-        drawTransformed(++i, 't');
-        // u foot to u lower leg
-        drawTransformed(++i, 't');
-    glPopMatrix();
-
-    // the following codes could be written in a for loop.
-    // Here I expand them so that you can better trace the changes of cirlce's coordinate system.
-
-    //int cid = -1; // the index of current circle
-    //// circle 0
-    //cid = 0;
-    //glTranslatef(translations[cid * 2 + 0], translations[cid * 2 + 1], 0.0f);
-    //glRotatef(rotations[cid], 0.0f, 0.0f, 1.0f);
-    //drawCircle(CIRCLE_RADIUM * (MAX_NUM_CIRCLE - cid) / MAX_NUM_CIRCLE, colors + cid * 3);
-
-    //// circle 1
-    //cid = 1;
-    //glTranslatef(translations[cid * 2 + 0], translations[cid * 2 + 1], 0.0f);
-    //glRotatef(rotations[cid], 0.0f, 0.0f, 1.0f);
-    //drawCircle(CIRCLE_RADIUM * (MAX_NUM_CIRCLE - cid) / MAX_NUM_CIRCLE, colors + cid * 3);
-
-    //// circle 2
-    //cid = 2;
-    //glTranslatef(translations[cid * 2 + 0], translations[cid * 2 + 1], 0.0f);
-    //glRotatef(rotations[cid], 0.0f, 0.0f, 1.0f);
-    //drawCircle(CIRCLE_RADIUM * (MAX_NUM_CIRCLE - cid) / MAX_NUM_CIRCLE, colors + cid * 3);
-
-    //// circle 3
-    //cid = 3;
-    //glTranslatef(translations[cid * 2 + 0], translations[cid * 2 + 1], 0.0f);
-    //glRotatef(rotations[cid], 0.0f, 0.0f, 1.0f);
-    //glPushMatrix(); // push the circle 1's CS to the modelview stack
-    //drawCircle(CIRCLE_RADIUM * (MAX_NUM_CIRCLE - cid) / MAX_NUM_CIRCLE, colors + cid * 3);
-
-    //// circle 4
-    //cid = 4;
-    //glTranslatef(translations[cid * 2 + 0], translations[cid * 2 + 1], 0.0f);
-    //glRotatef(rotations[cid], 0.0f, 0.0f, 1.0f);
-    //drawCircle(CIRCLE_RADIUM * (MAX_NUM_CIRCLE - cid) / MAX_NUM_CIRCLE, colors + cid * 3);
-    //glPopMatrix(); // back to the CS of Circle 1
-
-    //// circle 5
-    //cid = 5;
-    //glTranslatef(translations[cid * 2 + 0], translations[cid * 2 + 1], 0.0f);
-    //glRotatef(rotations[cid], 0.0f, 0.0f, 1.0f);
-    //drawCircle(CIRCLE_RADIUM * (MAX_NUM_CIRCLE - cid) / MAX_NUM_CIRCLE, colors + cid * 3);
-
+    glPopMatrix(); // Restore to initial global translation (end of figure)
 
     glutSwapBuffers();
 }
