@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{48b5b0cd-edf0-4a43-a846-b15043543988}</ProjectGuid>
-    <RootNamespace>Assignment5</RootNamespace>
+    <ProjectGuid>{4316f4c1-7b76-453f-908f-752cd4d669d0}</ProjectGuid>
+    <RootNamespace>DemoCurve</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -126,19 +126,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Bullet.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Monster.cpp" />
-    <ClCompile Include="MyHunter.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Bullet.h" />
-    <ClInclude Include="Hunter.h" />
-    <ClInclude Include="Monster.h" />
-    <ClInclude Include="MyHunter.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="setting.txt" />
+    <ClCompile Include="DemoCurve.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
