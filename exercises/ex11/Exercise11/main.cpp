@@ -65,7 +65,13 @@ Point3D getLoopPoint(float t)
 // ****************************************************************
 // Write your code here.
 // Add functions for the cubic Bezier function.
-
+// 
+// Cubic Bézier function
+float cubicBezier(float t, float p0, float p1, float p2, float p3)
+{
+    float u = 1.0f - t;
+    return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
+}
 // ****************************************************************
 
 // Initialize the curve points
