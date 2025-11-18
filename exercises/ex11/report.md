@@ -1,0 +1,5 @@
+# Exercise 11: Bezier Curve Easing
+
+This exercise explored how we might use Bezier curves to implement different easing effects. I liked the exercise because I know the human eye is drawn to anything jarring, much like how edges of objects tend to stand out. So, in a video game, it feels more realistic to implement these easing effects for anything that's moving - an elevator, a car, a moving platform, and so on.
+
+I'm not quite sure if the intention was to have the box use an ease-in-out for every point on the curve? It didn't seem like it, so I took the `cubicBezier`, `solveBezierX`, and `cubicBezierEasing` functions from `bezier_transform_practice.cpp` to create the easing animation. I then just used `cubicBezierEasing()`, setting the calculated value of `t` to its result. The result is that the box will move slowly at the start, speed up, and then slow down to a stop as it reaches the origin again.
