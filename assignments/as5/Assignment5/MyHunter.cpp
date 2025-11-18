@@ -1,4 +1,8 @@
+#define _USE_MATH_DEFINES
+
 #include "MyHunter.h"
+#include <iostream>
+#include <cmath>
 
 MyHunter::MyHunter(vec2 _position, int _ID)
 {
@@ -9,22 +13,22 @@ MyHunter::MyHunter(vec2 _position, int _ID)
 	// customize your player
 
 	// customize the name of your player
-	playerName = "hunter" + to_string(ID);
+	playerName = "zach " + to_string(ID);
 
 	// upgrade your player by calling the upgrade(armor, speed, shotgun, bullet) function
 	// You have a total of 20 points for upgrading, 
 	// and each attribute (armor, speed, shotgun, and bullet) can’t exceed 10 points. 
-	unsigned int armorPoint = 0;
-	unsigned int speedPoint = 0;
-	unsigned int shotgunPoint = 0;
+	unsigned int armorPoint = 5;
+	unsigned int speedPoint = 5;
+	unsigned int shotgunPoint = 10;
 	unsigned int bulletPoint = 0;
 	upgrade(armorPoint, speedPoint, shotgunPoint, bulletPoint);
 
 	// customize the color of your player
-	bodyColor = vec3(1.0f, 0.0f, 0.0f);
-	headColor = vec3(0.7f, 0.1f, 0.1f);
-	shotgunColor = vec3(0.0f, 0.0f, 0.0f);
-	bulletColor = vec3(0.0f, 0.0f, 0.0f);
+	bodyColor = vec3(0.1f, 0.1f, 0.1f);
+	headColor = vec3(0.0f, 0.5f, 1.0f);
+	shotgunColor = vec3(0.2f, 0.2f, 0.2f);
+	bulletColor = vec3(1.0f, 0.4f, 0.0f);
 	// write your code above
 	/******************************/
 
@@ -63,6 +67,31 @@ void MyHunter::update(float _deltaTime, const vector<Monster*> _monsters, const 
 			}
 		}
 
+		if (nearestMonster != nullptr) {
+			//std::cout << "(" << nearestMonster->position.x << ", " << nearestMonster->position.y << ")" << std::endl;
+			vec2 difference = nearestMonster->position - position;
+			float angle = std::atan2(difference.y, difference.x) * (180.0 / M_PI);
+
+			rotation = angle;
+
+			// define acceleration based on "forces"
+			vec2 opposite = -difference;
+			acceleration.x = opposite.x;
+			acceleration.y = opposite.y;
+
+			// calculate velocity based on acceleration
+			velocity.x += acceleration.x * _deltaTime;
+			velocity.y += acceleration.y * _deltaTime;
+
+			// normalize to max speed
+			velocity = glm::normalize(velocity) * speed;
+
+			// update position
+			position.x += velocity.x * _deltaTime;
+			position.y += velocity.y * _deltaTime;
+		}
+		
+
 		// Write your implementation above
 		/************************************************************/
 
@@ -82,8 +111,16 @@ bool MyHunter::circleCollision(vec2 c1, vec2 c2, float r1, float r2)
 {
 	/***************************************/
 	// return whether or not two circles are intersected
-	return false;
+	float distance = glm::distance(c1, c2);
+	float minIntersectDist = r1 + r2;
+
+	return distance < minIntersectDist;
 	/***************************************/
+}
+
+vec2 MyHunter::getIdealPosition()
+{
+
 }
 
 void MyHunter::collisionDetection(vector<Monster*> _monsters)

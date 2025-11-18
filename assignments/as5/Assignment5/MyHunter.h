@@ -30,6 +30,8 @@ private:
 	vec3 shotgunColor;
 
 	// define your variables
+	vec2 acceleration;
+	vec2 velocity;
 
 /*****************************/
 // functions you need to complete
@@ -38,6 +40,7 @@ public:
 	void update(float _deltaTime, const vector<Monster*> _monsters, const vector<Hunter*> _players) override;
 private:
 	bool circleCollision(vec2 c1, vec2 c2, float r1, float r2);
+	vec2 getIdealPosition();
 
 /*****************************/
 

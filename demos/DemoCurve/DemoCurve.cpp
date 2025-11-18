@@ -1,158 +1,390 @@
-#include <GL/glut.h>
-#include <cmath>
+﻿#define _USE_MATH_DEFINES
+
+#include <GL/glew.h>
+#include <GL/freeglut.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <cmath>
 
-// Cubic B�zier function
-float cubicBezier(float t, float p0, float p1, float p2, float p3)
+// Shader sources - using built-in matrix uniforms
+const char* vertexShaderSource = R"(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aColor;
+
+out vec3 vertexColor;
+
+uniform mat4 mvp;
+
+void main()
 {
-    float u = 1.0f - t;
-    return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
+    gl_Position = mvp * vec4(aPos, 1.0);
+    vertexColor = aColor;
 }
+)";
 
-// Solve for t given x using Newton-Raphson method
-float solveBezierX(float x, float x1, float x2)
+const char* fragmentShaderSource = R"(
+#version 330 core
+in vec3 vertexColor;
+out vec4 FragColor;
+
+void main()
 {
-    float t = x;
-    for (int i = 0; i < 8; i++)
+    FragColor = vec4(vertexColor, 1.0);
+}
+)";
+
+// Global variables
+GLuint shaderProgram;
+GLuint VAO, VBO;
+float rotationAngle = 0.0f;
+int windowWidth = 800;
+int windowHeight = 600;
+
+GLuint compileShader(GLenum type, const char* source)
+{
+    // Create a shader object of the specified type (GL_VERTEX_SHADER or GL_FRAGMENT_SHADER)
+    GLuint shader = glCreateShader(type);
+
+    // Attach the source code to the shader object
+    // Parameters: shader object, number of strings, array of strings, array of string lengths (NULL = null-terminated)
+    glShaderSource(shader, 1, &source, nullptr);
+
+    // Compile the shader source code into GPU instructions
+    glCompileShader(shader);
+
+    // Check if compilation was successful
+    GLint success;
+    // Get the compilation status (GL_TRUE or GL_FALSE)
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+
+    if (!success)
     {
-        float xt = cubicBezier(t, 0.0f, x1, x2, 1.0f);
-        float dx = xt - x;
-        if (fabs(dx) < 0.0001f)
-            break;
-
-        float u = 1.0f - t;
-        float derivative = 3 * u * u * (x1 - 0.0f) + 6 * u * t * (x2 - x1) + 3 * t * t * (1.0f - x2);
-        if (fabs(derivative) < 0.000001f)
-            break;
-
-        t -= dx / derivative;
-        t = fmax(0.0f, fmin(1.0f, t));
+        // If compilation failed, retrieve the error message
+        char infoLog[512];
+        // Get the shader info log (error messages)
+        glGetShaderInfoLog(shader, 512, nullptr, infoLog);
+        // Print the error to the console
+        std::cerr << "Shader compilation error: " << infoLog << std::endl;
     }
-    return t;
+
+    // Return the compiled shader object ID
+    return shader;
 }
 
-// Cubic-bezier function
-float cubicBezierEasing(float x, float x1, float y1, float x2, float y2)
+GLuint createShaderProgram()
 {
-    if (x <= 0.0f)
-        return 0.0f;
-    if (x >= 1.0f)
-        return 1.0f;
+    // Compile both vertex and fragment shaders
+    GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
+    GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
 
-    float t = solveBezierX(x, x1, x2);
-    return cubicBezier(t, 0.0f, y1, y2, 1.0f);
+    // Create a program object to link shaders together
+    GLuint program = glCreateProgram();
+
+    // Attach the vertex shader to the program
+    glAttachShader(program, vertexShader);
+
+    // Attach the fragment shader to the program
+    glAttachShader(program, fragmentShader);
+
+    // Link the vertex and fragment shaders into a complete program
+    // This connects shader inputs/outputs and prepares the program for use
+    glLinkProgram(program);
+
+    // Check if linking was successful
+    GLint success;
+    // Get the link status (GL_TRUE or GL_FALSE)
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+
+    if (!success)
+    {
+        // If linking failed, retrieve the error message
+        char infoLog[512];
+        // Get the program info log (error messages)
+        glGetProgramInfoLog(program, 512, nullptr, infoLog);
+        // Print the error to the console
+        std::cerr << "Shader program linking error: " << infoLog << std::endl;
+    }
+
+    // Delete the shader objects since they're now linked into the program
+    // They're no longer needed individually
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    // Return the linked shader program ID
+    return program;
 }
 
-// Animation state
-float animTime = 0.0f;
-float animDuration = 2.0f;
-bool animReverse = false;
-
-void drawBox(float size)
+void initGL()
 {
-    glBegin(GL_QUADS);
-    glVertex2f(-size, -size);
-    glVertex2f(size, -size);
-    glVertex2f(size, size);
-    glVertex2f(-size, size);
-    glEnd();
+    // Triangle vertices - larger size
+    float vertices[] = {
+        // positions        // colors
+        0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // top - red
+        -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left - green
+        1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f   // bottom right - blue
+    };
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // Color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+
+    shaderProgram = createShaderProgram();
+
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
+    std::cout << "OpenGL initialization complete" << std::endl;
+}
+
+// Build the model matrix with rotation
+// PRACTICE: Complete this function to create a Y-axis rotation matrix
+glm::mat4 buildModelMatrix(float angleInDegrees)
+{
+    // TODO: Convert angle from degrees to radians
+    // Hint: radians = degrees * PI / 180
+    float angleInRadians = angleInDegrees * (M_PI / 180.0); // REPLACE THIS
+
+    // TODO: Calculate cosine and sine for rotation
+    // Hint: Use cos() and sin() functions
+    float c = std::cos(angleInRadians); // REPLACE THIS
+    float s = std::sin(angleInRadians); // REPLACE THIS
+
+    // TODO: Create identity matrix
+    glm::mat4 model(1.0f);
+
+    // TODO: Apply Y-axis rotation to the matrix
+    // Y-axis rotation matrix formula:
+    // [cos θ   0   sin θ   0]
+    // [  0     1     0     0]
+    // [-sin θ  0   cos θ   0]
+    // [  0     0     0     1]
+    // Hint: model[column][row] - remember GLM uses column-major ordering
+    // WRITE YOUR CODE HERE
+    model[0][0] = c;
+    model[2][0] = s;
+    model[0][2] = -s;
+    model[2][2] = c;
+
+    return model;
+}
+
+// Build the view matrix (camera position and orientation)
+// PRACTICE: Complete this function to position the camera
+glm::mat4 buildViewMatrix()
+{
+    // TODO: Define camera position in world space
+    // Hint: Position it at (0, 0.5, 5) to see the triangle from slightly above
+    glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, 5.0f); // REPLACE THIS
+
+    // TODO: Define the point the camera is looking at
+    // Hint: Look at the origin (0, 0, 0) - center of the world
+    glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f); // REPLACE THIS
+
+    // TODO: Define the up direction
+    // Hint: Y-axis is typically "up" in 3D graphics
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f); // REPLACE THIS
+
+    // TODO: Create view matrix using lookAt
+    // Hint: glm::lookAt(eye, center, up)
+    return glm::lookAt(cameraPos, target, up); // REPLACE THIS
+}
+
+// Build the projection matrix (perspective)
+// PRACTICE: Complete this function to create a perspective projection
+// The projection matrix transforms 3D camera space coordinates into 2D screen space
+// It creates the illusion of depth - objects farther away appear smaller
+glm::mat4 buildProjectionMatrix()
+{
+    // TODO: Calculate aspect ratio from window dimensions
+    // Aspect ratio prevents distortion when window width != height
+    // Hint: aspect = width / height
+    float aspectRatio = (float)windowWidth / (float)windowHeight; // REPLACE THIS
+
+    // TODO: Define field of view (FOV) and convert to radians
+    // FOV controls how "wide" the camera sees (like zoom on a camera)
+    // Hint: 45 degrees is a common FOV, PI = 3.14159265f
+    float fov = 45 * (M_PI / 180.0); // REPLACE THIS
+
+    // TODO: Calculate tangent of half the field of view
+    // This is used in the projection matrix formula
+    // Hint: Use tan() function
+    float tanHalfFov = std::tan(fov / 2.0f); // REPLACE THIS
+
+    // TODO: Define near and far clipping planes
+    // Near plane: closest distance camera can see
+    // Far plane: farthest distance camera can see
+    // Objects outside [near, far] range are not rendered
+    // Hint: Near = 0.1, Far = 100.0 are common values
+    float zNear = 0.1f; // REPLACE THIS
+    float zFar = 100.0f;  // REPLACE THIS
+
+    // TODO: Build perspective projection matrix
+    // Perspective projection matrix formula (OpenGL convention):
+    // [1/(aspect*tan(fov/2))      0                    0                           0              ]
+    // [        0            1/tan(fov/2)               0                           0              ]
+    // [        0                  0          -(far+near)/(far-near)    -(2*far*near)/(far-near)  ]
+    // [        0                  0                   -1                           0              ]
+    //
+    // Remember: GLM uses column-major ordering, so matrix[column][row]
+    glm::mat4 projection(0.0f);
+
+    // TODO: Set element [0][0] - X scaling (accounts for aspect ratio and FOV)
+    // This controls horizontal field of view
+    // Formula: 1.0 / (aspectRatio * tanHalfFov)
+    // WRITE YOUR CODE HERE
+    projection[0][0] = 1.0 / (aspectRatio * tanHalfFov);
+
+    // TODO: Set element [1][1] - Y scaling (accounts for FOV)
+    // This controls vertical field of view
+    // Formula: 1.0 / tanHalfFov
+    // WRITE YOUR CODE HERE
+    projection[1][1] = 1.0 / tanHalfFov;
+
+    // TODO: Set element [2][2] - Z mapping (depth calculations)
+    // Maps depth range [near, far] to normalized device coordinates [-1, 1]
+    // Formula: -(zFar + zNear) / (zFar - zNear)
+    // WRITE YOUR CODE HERE
+    projection[2][2] = -(zFar + zNear) / (zFar - zNear);
+
+    // TODO: Set element [2][3] - Perspective divide trigger
+    // This value (-1) causes the w-component to be set to -z
+    // The GPU then divides x,y,z by w to create perspective effect
+    // Value: -1.0
+    // WRITE YOUR CODE HERE
+    projection[2][3] = -1.0;
+
+    // TODO: Set element [3][2] - Z translation component
+    // Adjusts depth values for proper depth testing
+    // Formula: -(2.0 * zFar * zNear) / (zFar - zNear)
+    // WRITE YOUR CODE HERE
+    projection[3][2] = -(2.0 * zFar * zNear) / (zFar - zNear);
+
+    return projection;
 }
 
 void display()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    float progress = animTime / animDuration;
-    if (animReverse)
-        progress = 1.0f - progress;
+    glUseProgram(shaderProgram);
 
-    // Box 1: Translation (Top-Left) - Red
-    // Using ease-in-out: cubic-bezier(0.42, 0, 0.58, 1)
-    glPushMatrix();
-    float easeTranslate = cubicBezierEasing(progress, 0.42f, 0.0f, 0.58f, 1.0f);
-    float translateX = -0.5f - 0.25 + easeTranslate * 0.6f;
-    glTranslatef(translateX, 0.5f, 0.0f);
-    glColor3f(1.0f, 0.0f, 0.0f); // Red
-    drawBox(0.15f);
-    glPopMatrix();
+    // === MODEL-VIEW-PROJECTION (MVP) TRANSFORMATION PIPELINE ===
+    //
+    // To render 3D objects on a 2D screen, we need three transformations:
+    //
+    // 1. MODEL MATRIX: Positions/rotates/scales the object in the 3D world
+    //    - Transforms from "object space" to "world space"
+    //    - Example: Rotating our triangle
+    //
+    // 2. VIEW MATRIX: Positions and orients the camera in the world
+    //    - Transforms from "world space" to "camera space"
+    //    - Example: Moving camera back to see the triangle
+    //
+    // 3. PROJECTION MATRIX: Creates perspective (objects far away look smaller)
+    //    - Transforms from "camera space" to "clip space" (normalized coordinates)
+    //    - Example: Making distant objects appear smaller
+    //
+    // These are combined: MVP = Projection * View * Model
+    // Applied right-to-left: vertex -> Model -> View -> Projection -> screen
 
-    // Box 2: Rotation (Top-Right) - Green
-    // Using ease-out: cubic-bezier(0, 0, 0.58, 1)
-    glPushMatrix();
-    glTranslatef(0.5f, 0.5f, 0.0f); // position the box to top right.
-    // ****************************************************
-    // Write your code here.
-    float easeRotation = cubicBezierEasing(progress, 0.0f, 0.0f, 0.58f, 1.0f);
-    float rotationZ = -0.25 + easeRotation * 180.0f;
-    glRotatef(rotationZ, 0.0f, 0.0f, 1.0f);
-    glColor3f(0.0f, 1.0f, 0.0f);
-    drawBox(0.15f);
-    // ****************************************************
-    glPopMatrix();
+    // Build transformation matrices using helper functions
+    glm::mat4 model = buildModelMatrix(rotationAngle);
+    glm::mat4 view = buildViewMatrix();
+    glm::mat4 projection = buildProjectionMatrix();
 
-    // Box 3: Scale (Bottom-Left) - Blue
-    // Using ease-in: cubic-bezier(0.42, 0, 1, 1)
-    glPushMatrix();
-    glTranslatef(-0.5f, -0.5f, 0.0f); // position the box to bottom left.
-    // ****************************************************
-    // Write your code here.
-    float easeScale = cubicBezierEasing(progress, 0.42f, 0.0f, 1.0f, 1.0f) + 0.5f;
-    glScalef(easeScale, easeScale, 1.0f);
-    glColor3f(0.0f, 0.0f, 1.0f);
-    drawBox(0.15f);
-    // ****************************************************
-    glPopMatrix();
+    // Combine matrices: MVP = Projection * View * Model
+    // Order matters! Matrix multiplication is NOT commutative
+    // We multiply right-to-left: projection * view * model
+    glm::mat4 mvp = projection * view * model;
 
-    // Box 4: Color (Bottom-Right) - Blue to Green
-    // Using custom: cubic-bezier(0.68, -0.55, 0.265, 1.55)
-    glPushMatrix();
-    glTranslatef(0.5f, -0.5f, 0.0f); // position the box to bottom right.
-    // ****************************************************
-    // Write your code here.
-    float easeColor = cubicBezierEasing(progress, 0.68, -0.55, 0.265, 1.55);
-    glColor3f(0.0f, 1 - easeColor, easeColor);
-    drawBox(0.15f);
-    // ****************************************************
-    glPopMatrix();
+    // Send combined MVP matrix to shader
+    GLint mvpLoc = glGetUniformLocation(shaderProgram, "mvp");
+    glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+
+    // Draw the triangle
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindVertexArray(0);
 
     glutSwapBuffers();
 }
 
 void timer(int value)
 {
-    animTime += 0.016f; // ~60 FPS
-
-    if (animTime >= animDuration)
+    rotationAngle += 0.5f; // Slower rotation (was 1.0f)
+    if (rotationAngle > 360.0f)
     {
-        animTime = 0.0f;
-        animReverse = !animReverse;
+        rotationAngle -= 360.0f;
     }
 
     glutPostRedisplay();
     glutTimerFunc(16, timer, 0);
 }
 
-void init()
+void reshape(int width, int height)
 {
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(-1.0, 1.0, -1.0, 1.0);
-    glMatrixMode(GL_MODELVIEW);
+    if (height == 0)
+        height = 1;
+
+    // Update global window dimensions
+    windowWidth = width;
+    windowHeight = height;
+
+    // Update OpenGL viewport
+    glViewport(0, 0, width, height);
+}
+
+void keyboard(unsigned char key, int x, int y)
+{
+    if (key == 27)
+    {
+        exit(0);
+    }
 }
 
 int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-    glutInitWindowSize(800, 800);
-    glutCreateWindow("Bezier Curve Animations");
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+    glutInitWindowSize(800, 600);
+    glutCreateWindow("OpenGL Rotating Triangle");
 
-    init();
+    glewExperimental = GL_TRUE;
+    if (glewInit() != GLEW_OK)
+    {
+        std::cerr << "Failed to initialize GLEW" << std::endl;
+        return -1;
+    }
+
+    std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
+
+    initGL();
 
     glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
+    glutKeyboardFunc(keyboard);
     glutTimerFunc(0, timer, 0);
 
+    std::cout << "Starting main loop..." << std::endl;
     glutMainLoop();
+
     return 0;
 }
