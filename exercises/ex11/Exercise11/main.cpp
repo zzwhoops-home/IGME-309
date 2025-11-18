@@ -72,6 +72,42 @@ float cubicBezier(float t, float p0, float p1, float p2, float p3)
     float u = 1.0f - t;
     return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
 }
+
+// Solve for t given x using Newton-Raphson method
+float solveBezierX(float x, float x1, float x2)
+{
+    float t = x;
+    for (int i = 0; i < 8; i++)
+    {
+        float xt = cubicBezier(t, 0.0f, x1, x2, 1.0f);
+        float dx = xt - x;
+        if (fabs(dx) < 0.0001f)
+            break;
+
+        float u = 1.0f - t;
+        float derivative = 3 * u * u * (x1 - 0.0f) + 6 * u * t * (x2 - x1) + 3 * t * t * (1.0f - x2);
+        if (fabs(derivative) < 0.000001f)
+            break;
+
+        t -= dx / derivative;
+        t = fmax(0.0f, fmin(1.0f, t));
+    }
+    return t;
+}
+
+// Cubic-bezier function
+float cubicBezierEasing(float x, float x1, float y1, float x2, float y2)
+{
+    if (x <= 0.0f)
+        return 0.0f;
+    if (x >= 1.0f)
+        return 1.0f;
+
+    float t = solveBezierX(x, x1, x2);
+    return cubicBezier(t, 0.0f, y1, y2, 1.0f);
+}
+
+
 // ****************************************************************
 
 // Initialize the curve points
@@ -176,6 +212,10 @@ void display()
     // Hints:
     // 1. useEasing -> a flag for current easing state.
     // 2. apply necessary changes on t.
+    if (useEasing) {
+        // ease-in-out
+        t = cubicBezierEasing(t, 0.42f, 0.0f, 0.58f, 1.0f);
+    }
 
     // ****************************************************************
     Point3D boxPos = getLoopPoint(t);
