@@ -18,10 +18,10 @@ MyHunter::MyHunter(vec2 _position, int _ID)
 	// upgrade your player by calling the upgrade(armor, speed, shotgun, bullet) function
 	// You have a total of 20 points for upgrading, 
 	// and each attribute (armor, speed, shotgun, and bullet) can’t exceed 10 points. 
-	unsigned int armorPoint = 5;
-	unsigned int speedPoint = 5;
+	unsigned int armorPoint = 0;
+	unsigned int speedPoint = 0;
 	unsigned int shotgunPoint = 10;
-	unsigned int bulletPoint = 0;
+	unsigned int bulletPoint = 10;
 	upgrade(armorPoint, speedPoint, shotgunPoint, bulletPoint);
 
 	// customize the color of your player
@@ -33,6 +33,8 @@ MyHunter::MyHunter(vec2 _position, int _ID)
 	/******************************/
 
 	this->position = _position;
+	this->velocity = vec2(0.0f, 0.0f);
+	this->acceleration = vec2(0.0f, 0.0f);
 	reloadTimer = reloadDuration * (1.0f + rand() % 10 / 20.0f);
 	life = maxLife;
 }
@@ -67,6 +69,9 @@ void MyHunter::update(float _deltaTime, const vector<Monster*> _monsters, const 
 			}
 		}
 
+		// define acceleration based on "forces"
+		vec2 totalForces = vec2(0.0f, 0.0f);
+
 		if (nearestMonster != nullptr) {
 			//std::cout << "(" << nearestMonster->position.x << ", " << nearestMonster->position.y << ")" << std::endl;
 			vec2 difference = nearestMonster->position - position;
@@ -74,22 +79,53 @@ void MyHunter::update(float _deltaTime, const vector<Monster*> _monsters, const 
 
 			rotation = angle;
 
-			// define acceleration based on "forces"
-			vec2 opposite = -difference;
-			acceleration.x = opposite.x;
-			acceleration.y = opposite.y;
+			// the closer you are, the bigger the force - flee force away from nearest enemy
+			const float maxFleeForce = 10000.0f;
+			float clampedFleeForce = minDis < 1.0 ? maxFleeForce : (1 / minDis) * maxFleeForce;
+			totalForces += glm::normalize(-difference) * clampedFleeForce;
 
-			// calculate velocity based on acceleration
-			velocity.x += acceleration.x * _deltaTime;
-			velocity.y += acceleration.y * _deltaTime;
-
-			// normalize to max speed
-			velocity = glm::normalize(velocity) * speed;
-
-			// update position
-			position.x += velocity.x * _deltaTime;
-			position.y += velocity.y * _deltaTime;
+			// move toward location furthest away from any enemy
+			totalForces += getIdealPosForce(_monsters);
 		}
+
+		// find nearest player, try to get behind them
+		minDis = 1000.0f;
+		Hunter* nearestPlayer = nullptr;
+
+		for (int i = 0; i < _players.size(); i++) {
+			if (_players[i]->isActived == false)
+				continue;
+			float dist = distance(this->position, _players[i]->position);
+			if (dist < minDis) {
+				minDis = dist;
+				nearestPlayer = _players[i];
+			}
+		}
+
+		if (nearestPlayer != nullptr && nearestMonster != nullptr) {
+			vec2 nearestPlayerToMonster = nearestMonster->position - nearestPlayer->position;
+			vec2 behind = nearestPlayer->position + glm::normalize(nearestPlayerToMonster) * 3.0f;
+
+			vec2 getBehindForce = behind - this->position;
+			totalForces += glm::normalize(getBehindForce) * 50.0f;
+		}
+
+		acceleration.x = totalForces.x;
+		acceleration.y = totalForces.y;
+
+		// calculate velocity based on acceleration
+		velocity += acceleration * _deltaTime;
+
+		// "friction"
+		velocity *= (1.0f - 0.1f * _deltaTime);
+
+		// normalize to max speed
+		if (glm::length(velocity) > speed) {
+			velocity = glm::normalize(velocity) * speed;
+		}
+
+		// update position
+		position += velocity * _deltaTime;
 		
 
 		// Write your implementation above
@@ -118,9 +154,48 @@ bool MyHunter::circleCollision(vec2 c1, vec2 c2, float r1, float r2)
 	/***************************************/
 }
 
-vec2 MyHunter::getIdealPosition()
+vec2 MyHunter::getIdealPosForce(const vector<Monster*> _monsters)
 {
+	// brute force calculation by making the play area into the grid, then finding the grid
+	// that is the furthest away from all enemies
+	const int gridSize = 10;
+	const float boundaryMin = -300.0f;
+	const float boundaryMax = 300.0f;
 
+	vec2 gridStartOffset = vec2(boundaryMin, boundaryMin);
+
+	float tileSize = (boundaryMax * 2) / (float)gridSize;
+	vec2 centerOffset = vec2(tileSize / 2.0f, tileSize / 2.0f);
+
+	float maxSqDist = -1.0f;
+	vec2 bestPoint = vec2();
+	// split screen into 10x10 grid
+	for (int i = 0; i < gridSize; i++) {
+		for (int j = 0; j < gridSize; j++) {
+			vec2 pos = gridStartOffset + vec2((float)i * tileSize, (float)j * tileSize) + centerOffset;
+
+			float curMinSqDist = std::numeric_limits<float>::max();
+
+			for (int i = 0; i < _monsters.size(); i++) {
+				if (_monsters[i]->isActived == false)
+					continue;
+
+				vec2 diff = _monsters[i]->position - pos;
+				float dist = (diff.x * diff.x) + (diff.y + diff.y);
+				
+				curMinSqDist = std::min(curMinSqDist, dist);
+			}
+
+			if (curMinSqDist > maxSqDist) {
+				maxSqDist = curMinSqDist;
+				bestPoint = pos;
+			}
+		}
+	}
+
+	// calculate force vector for player
+	vec2 difference = bestPoint - this->position;
+	return glm::normalize(difference) * 20.0f;
 }
 
 void MyHunter::collisionDetection(vector<Monster*> _monsters)

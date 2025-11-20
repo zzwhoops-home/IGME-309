@@ -40,7 +40,7 @@ public:
 	void update(float _deltaTime, const vector<Monster*> _monsters, const vector<Hunter*> _players) override;
 private:
 	bool circleCollision(vec2 c1, vec2 c2, float r1, float r2);
-	vec2 getIdealPosition();
+	vec2 getIdealPosForce(const vector<Monster*> _monsters);
 
 /*****************************/
 
