@@ -25,12 +25,11 @@ MyMesh::MyMesh()
 
 MyMesh::~MyMesh()
 {
-	//Don't forget to deallocate the buffer objects from the GPU when your program is shut down!
+	// Don't forget to deallocate the buffer objects from the GPU when your program is shut down!
 	glDeleteBuffers(1, &vbo_id);
 	glDeleteBuffers(1, &nbo_id);
 	glDeleteBuffers(1, &ibo_id);
 }
-
 
 vec3 MyMesh::setFaceNormal(vec3 v0, vec3 v1, vec3 v2)
 {
@@ -40,11 +39,10 @@ vec3 MyMesh::setFaceNormal(vec3 v0, vec3 v1, vec3 v2)
 	return normalize(n);
 }
 
-
-void MyMesh::loadFromOBJ(const char* fileName)
+void MyMesh::loadFromOBJ(const char *fileName)
 {
-	vector <vec3> temp_verts;
-	vector <uvec3> temp_tris;
+	vector<vec3> temp_verts;
+	vector<uvec3> temp_tris;
 
 	ifstream fs(fileName);
 
@@ -54,12 +52,14 @@ void MyMesh::loadFromOBJ(const char* fileName)
 	int vid = 0;
 
 	std::string line;
-	while (std::getline(fs, line)) {
+	while (std::getline(fs, line))
+	{
 		std::istringstream iss(line);
 
 		iss >> c;
 
-		switch (c) {
+		switch (c)
+		{
 		case 'v':
 		{
 			// read a vertex
@@ -93,7 +93,8 @@ void MyMesh::loadFromOBJ(const char* fileName)
 	indices = new unsigned int[triNum * 3];
 	vNormals = new float[vertNum * 3];
 
-	for (unsigned int i = 0; i < vertNum; i++) {
+	for (unsigned int i = 0; i < vertNum; i++)
+	{
 		// copy vertex data to vertex array
 		vertices[i * 3 + 0] = temp_verts[i].x;
 		vertices[i * 3 + 1] = temp_verts[i].y;
@@ -102,7 +103,8 @@ void MyMesh::loadFromOBJ(const char* fileName)
 		// initialize vertex normal values t0 <0,0,0>
 		vNormals[i * 3 + 0] = vNormals[i * 3 + 1] = vNormals[i * 3 + 2] = 0.0f;
 	}
-	for (unsigned int i = 0; i < triNum; i++) {
+	for (unsigned int i = 0; i < triNum; i++)
+	{
 		// copy triangle data to index array
 		indices[i * 3 + 0] = temp_tris[i].x;
 		indices[i * 3 + 1] = temp_tris[i].y;
@@ -110,7 +112,8 @@ void MyMesh::loadFromOBJ(const char* fileName)
 	}
 
 	// compute face normals
-	for (unsigned int i = 0; i < triNum; i++) {
+	for (unsigned int i = 0; i < triNum; i++)
+	{
 		// get the face normal of the triangle and accumulate it into each vertex of this triangle
 		vec3 n = setFaceNormal(temp_verts[temp_tris[i].x], temp_verts[temp_tris[i].y], temp_verts[temp_tris[i].z]);
 		vNormals[temp_tris[i].x * 3 + 0] += n.x;
@@ -127,13 +130,14 @@ void MyMesh::loadFromOBJ(const char* fileName)
 	}
 
 	// normalize accumulated vertex normals
-	for (unsigned int i = 0; i < vertNum; i++) {
+	for (unsigned int i = 0; i < vertNum; i++)
+	{
 		vec3 n = normalize(vec3(vNormals[i * 3 + 0], vNormals[i * 3 + 1], vNormals[i * 3 + 2]));
 		vNormals[i * 3 + 0] = n.x;
 		vNormals[i * 3 + 1] = n.y;
 		vNormals[i * 3 + 2] = n.z;
 
-		//cout << "v[" << i<<"]'s normal=" << vNormals[i * 3 + 0] << "," << vNormals[i * 3 + 1] << "," << vNormals[i * 3 + 2] << endl;
+		// cout << "v[" << i<<"]'s normal=" << vNormals[i * 3 + 0] << "," << vNormals[i * 3 + 1] << "," << vNormals[i * 3 + 2] << endl;
 	}
 
 	prepareBufferObjects();
@@ -149,7 +153,7 @@ void MyMesh::prepareBufferObjects()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
 
 	// upload data to VBO - data went to GPU
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float)* vertNum * 3, vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertNum * 3, vertices, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0); // clean up
 
@@ -167,13 +171,13 @@ void MyMesh::prepareBufferObjects()
 	// repeat for indices
 	glGenBuffers(1, &ibo_id);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_id);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)* triNum * 3, indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * triNum * 3, indices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // clean up
 	delete[] indices;
 }
 void MyMesh::update()
 {
-	// we will use this for transformations later.... 
+	// we will use this for transformations later....
 }
 
 void MyMesh::draw()
@@ -181,7 +185,8 @@ void MyMesh::draw()
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 
-	switch (viewMode) {
+	switch (viewMode)
+	{
 
 	case SHADED:
 		drawShadedMesh();
@@ -202,12 +207,12 @@ void MyMesh::drawShadedMesh()
 {
 	if (vertNum <= 0 && triNum <= 0)
 		return;
-    glUseProgram(0);
+	glUseProgram(0);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_CULL_FACE);
-	//glEnable(GL_POLYGON_OFFSET_FILL);
-	//glPolygonOffset(1.0f, 1.0f);
+	// glEnable(GL_POLYGON_OFFSET_FILL);
+	// glPolygonOffset(1.0f, 1.0f);
 	glPolygonMode(GL_FRONT, GL_FILL);
 
 	glMaterialfv(GL_FRONT, GL_AMBIENT, value_ptr(amb));
@@ -233,7 +238,7 @@ void MyMesh::drawShadedMesh()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	glPopMatrix();
-	//glDisable(GL_POLYGON_OFFSET_FILL);
+	// glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
 void MyMesh::drawWireframeMesh()
@@ -241,16 +246,16 @@ void MyMesh::drawWireframeMesh()
 	if (vertNum <= 0 && triNum <= 0)
 		return;
 
-    glUseProgram(0);
+	glUseProgram(0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glDisable(GL_LIGHTING); // disable lighting so that it uses the default flat color for shading
-	
+
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glColor3f(0.1f, 0.1f, 0.1f); 
-	
+	glColor3f(0.1f, 0.1f, 0.1f);
+
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_FLOAT, 0, NULL);

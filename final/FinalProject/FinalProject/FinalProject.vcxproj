@@ -183,10 +183,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="audio_analyzer.cpp" />
+    <ClCompile Include="Branch.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Tree.cpp" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="audio_analyzer.h" />
+    <ClInclude Include="Branch.h" />
+    <ClInclude Include="Tree.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="jingle_bells.wav" />

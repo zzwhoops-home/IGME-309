@@ -6,12 +6,11 @@
 #include <GL/freeglut.h>
 #endif
 
-// include the gl mathematic library 
+// include the gl mathematic library
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/constants.hpp>
-
 
 #include "Camera.h"
 #include "Text.h"
@@ -25,11 +24,10 @@ int g_winWidth = 1024;
 int g_winHeight = 512;
 
 // global parameters for defining the light and shading effects
-GLfloat light0_pos[] = { 0.0f, 5.0f, 5.0f, 0.0f };
-GLfloat light0_Amb[] = { 0.4f, 0.3f, 0.3f, 1.0f };
-GLfloat light0_Diff[] = { 0.8f, 0.8f, 0.7f, 1.0f };
-GLfloat light0_Spec[] = { 0.9f, 0.9f, 0.9f, 1.0f };
-
+GLfloat light0_pos[] = {0.0f, 5.0f, 5.0f, 0.0f};
+GLfloat light0_Amb[] = {0.4f, 0.3f, 0.3f, 1.0f};
+GLfloat light0_Diff[] = {0.8f, 0.8f, 0.7f, 1.0f};
+GLfloat light0_Spec[] = {0.9f, 0.9f, 0.9f, 1.0f};
 
 Camera g_cam;
 Text g_text;
@@ -38,7 +36,6 @@ MyMesh g_mesh = MyMesh();
 
 // an object file path - a bunny model with 2K vertices
 const char meshFile[128] = "Mesh/bunny2k.obj";
-
 
 void init(void)
 {
@@ -69,7 +66,6 @@ void initialGL()
 
 	// specify polygon mode for rendering
 	glPolygonMode(GL_FRONT, GL_FILL);
-
 
 	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 	glShadeModel(GL_SMOOTH);
@@ -106,19 +102,20 @@ void display()
 	g_mesh.drawAABB();
 
 	// display the text
-	if (g_cam.isFocusMode()) {
+	if (g_cam.isFocusMode())
+	{
 		string str = "Cam mode: Focus";
-		g_text.draw(10, 30, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		g_text.draw(10, 30, const_cast<char *>(str.c_str()), g_winWidth, g_winHeight);
 	}
-	else if (g_cam.isFPMode()) {
+	else if (g_cam.isFPMode())
+	{
 		string str = "Cam mode: FP";
-		g_text.draw(10, 30, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		g_text.draw(10, 30, const_cast<char *>(str.c_str()), g_winWidth, g_winHeight);
 	}
 
 	char s[128];
 	sprintf_s(s, "vNum:%d, tNum:%d", g_mesh.getVertNum(), g_mesh.getTriNum());
 	g_text.draw(10, 50, s, g_winWidth, g_winHeight);
-
 
 	glutSwapBuffers();
 }
@@ -127,7 +124,8 @@ void reshape(int w, int h)
 {
 	g_winWidth = w;
 	g_winHeight = h;
-	if (h == 0) {
+	if (h == 0)
+	{
 		h = 1;
 	}
 	g_cam.setProj(g_winWidth, g_winHeight);
@@ -138,7 +136,6 @@ void reshape(int w, int h)
 void mouse(int button, int state, int x, int y)
 {
 	g_cam.mouseClick(button, state, x, y, g_winWidth, g_winHeight);
-
 }
 
 void motion(int x, int y)
@@ -154,7 +151,8 @@ void keyup(unsigned char key, int x, int y)
 void keyboard(unsigned char key, int x, int y)
 {
 	g_keyStates[key] = true;
-	switch (key) {
+	switch (key)
+	{
 	case 27:
 		exit(0);
 		break;
@@ -174,11 +172,10 @@ void keyboard(unsigned char key, int x, int y)
 			g_mesh.viewMode = SHADED_WITH_WIREFRAME;
 		glutPostRedisplay();
 		break;
-
 	}
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
@@ -199,6 +196,4 @@ int main(int argc, char* argv[])
 
 	glutMainLoop();
 	return 0;
-
-
 }
