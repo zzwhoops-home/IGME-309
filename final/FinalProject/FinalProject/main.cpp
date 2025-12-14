@@ -243,8 +243,8 @@ void initTree()
 {
     // **Gemini-generated so I didn't have to type everything out**
     // --- Define the default configuration parameters ---
-    int MIN_DEPTH = 1;
-    int MAX_DEPTH = 5;
+    int MIN_DEPTH = 4;
+    int MAX_DEPTH = 6;
     int MIN_CHILDREN = 2;
     int MAX_CHILDREN = 3;
 
@@ -252,15 +252,15 @@ void initTree()
     float START_WIDTH = 1.0f;   // The main trunk is 1 unit wide
 
     float HEIGHT_FALLOFF = 0.75f; // Each child branch is 75% the length of its parent
-    float WIDTH_FALLOFF = 0.5f;   // Each child branch is 80% the width of its parent
+    float WIDTH_FALLOFF = 0.6f;   // Each child branch is 80% the width of its parent
 
-    float MIN_ROTATION = -0.5f;   // -28 degrees (Min random angle, use radians)
-    float MAX_ROTATION = 0.5f;    // +28 degrees (Max random angle)
+    float MIN_ROTATION = -0.7f;   // -28 degrees (Min random angle, use radians)
+    float MAX_ROTATION = 0.7f;    // +28 degrees (Max random angle)
 
     float MAX_VERT_ANGLE = 1.0f;
 
     // Standard brown color for the wood
-    const float TREE_COLOR[3] = { 0.55f, 0.4f, 0.2f };
+    const float TREE_COLOR[3] = { 0.50f, 0.4f, 0.2f };
 
     // --- Instantiate the Tree ---
     tree = new Tree(

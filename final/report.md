@@ -14,6 +14,12 @@ My program was structured into multiple different classes that had `draw()`, `up
 
 ### Tree
 
-For the tree, I ended up creating a `Tree` and `Branch` class. I 
+For the tree, I ended up creating a `Tree` and `Branch` class. The tree handles the creation of the first "branch", which is the tree trunk and the initialization of the tree parameters. The `Branch` will recursively create new child branches that extend from the ends of its parent branch to create this pattern which fans out. I'll talk about this more in the Lessons learned section. 
+
+### Rain
+
+For the rain, I really just cannibalized Assignment 4's code as much as I could and implemented it the same way, just with a random initial position along the horizontal plane and a smaller horizontal force. These disappeared when they hit the ground instead of falling forever and were moved back up to be used again. I also added some extra parameters to control the rain's intensity so I could integrate it with the rest of the program.
 
 ## Lessons learned
+
+I learned a lot while working on this project, especially dealing with 3D space. I didn't have time to figure out how to get my solution to work with shaders and I wish I did but it was just such a busy semester. I ended up going with a simple immediate-mode drawing mechanism.

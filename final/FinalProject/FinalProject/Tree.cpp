@@ -105,6 +105,11 @@ void Tree::generate_tree()
     trunk_branch->generate_children(this, 0, max_depth);
 }
 
+void Tree::update_tree()
+{
+    //for (Branch* branch : )
+}
+
 void Tree::draw()
 {
     glMatrixMode(GL_MODELVIEW);
