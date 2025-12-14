@@ -1,6 +1,7 @@
 #include "utils.h"
 #include "Tree.h"
 #include "Branch.h"
+#include <iostream>
 
 // static cube vertices/indices
 // create cube
@@ -76,10 +77,6 @@ Tree::Tree(int min_depth_in, int max_depth_in,
 
     // trunk branch null until generate_tree called
     this->trunk_branch = nullptr;
-
-    // buffers
-    vbo_id = ibo_id = 0;
-    init_tree_buffers();
 }
 
 Tree::~Tree()
@@ -90,37 +87,6 @@ Tree::~Tree()
         delete this->trunk_branch;
         trunk_branch = nullptr;
     }
-
-    // clean buffers when done
-    glDeleteBuffers(1, &vbo_id);
-    glDeleteBuffers(1, &ibo_id);
-    glDeleteVertexArrays(1, &vao_id);
-}
-
-void Tree::init_tree_buffers()
-{
-    // prepare VBO
-    // generate a new VBO and get the associated ID
-    glGenVertexArrays(1, &vao_id);
-    glGenBuffers(1, &vbo_id);
-    glGenBuffers(1, &ibo_id);
-
-    glBindVertexArray(vao_id);
-
-    // bind VBO in order to use
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_id);
-    // upload data to VBO - data went to GPU
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * 3, vertices, GL_STATIC_DRAW);
-
-    // indices
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_id);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 8 * 3, indices, GL_STATIC_DRAW);
-
-    // vao
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindVertexArray(0);
 }
 
 void Tree::generate_tree()
@@ -130,15 +96,18 @@ void Tree::generate_tree()
 
     // all branches will be this color
     glColor3fv(color);
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
 
     // create trunk
     trunk_branch = new Branch(origin, start_dir, start_height, start_width);
 
     // start branch child recursion
-    trunk_branch->generate_children(this, 0, 0);
+    trunk_branch->generate_children(this, 0, max_depth);
 }
 
 void Tree::draw()
 {
+    glMatrixMode(GL_MODELVIEW);
+
     trunk_branch->draw();
 }

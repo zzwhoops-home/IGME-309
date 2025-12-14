@@ -16,7 +16,7 @@
 AudioAnalyzer* g_analyzer = nullptr;
 AudioFeatures g_currentFeatures;
 
-const float CAMERA_DISTANCE = 20.0f;
+const float CAMERA_DISTANCE = 50.0f;
 
 Tree* tree;
 
@@ -67,10 +67,12 @@ void display()
     glLoadIdentity();
 
     gluLookAt(
-        CAMERA_DISTANCE, 5.0f, 0.0f, // eye position
-        0.0f, 5.0f, 0.0f, // target
+        CAMERA_DISTANCE, 15.0f, 0.0f, // eye position
+        0.0f, 15.0f, 0.0f, // target
         0.0f, 1.0f, 0.0f // up vector
     );
+
+    tree->draw();
 
     //glColor3f(0.5f, 0.35f, 0.05f);
     //glPushMatrix();
@@ -134,6 +136,7 @@ void idle()
     // You might want to do animation here.
     // 
     // ***********************************************************************
+
 
     #pragma region Audio Feature Processing DO NOT REMOVE
     // Update callbacks based on current features
@@ -240,21 +243,21 @@ void initTree()
 {
     // **Gemini-generated so I didn't have to type everything out**
     // --- Define the default configuration parameters ---
-    int MIN_DEPTH = 5;
-    int MAX_DEPTH = 10;
-    int MIN_CHILDREN = 1;
+    int MIN_DEPTH = 1;
+    int MAX_DEPTH = 5;
+    int MIN_CHILDREN = 2;
     int MAX_CHILDREN = 3;
 
     float START_HEIGHT = 10.0f; // The main trunk is 10 units tall
     float START_WIDTH = 1.0f;   // The main trunk is 1 unit wide
 
     float HEIGHT_FALLOFF = 0.75f; // Each child branch is 75% the length of its parent
-    float WIDTH_FALLOFF = 0.8f;   // Each child branch is 80% the width of its parent
+    float WIDTH_FALLOFF = 0.5f;   // Each child branch is 80% the width of its parent
 
     float MIN_ROTATION = -0.5f;   // -28 degrees (Min random angle, use radians)
     float MAX_ROTATION = 0.5f;    // +28 degrees (Max random angle)
 
-    float MIN_VERT_ANGLE = 30.0f;
+    float MAX_VERT_ANGLE = 1.0f;
 
     // Standard brown color for the wood
     const float TREE_COLOR[3] = { 0.55f, 0.4f, 0.2f };
@@ -271,7 +274,7 @@ void initTree()
         WIDTH_FALLOFF,
         MIN_ROTATION,
         MAX_ROTATION,
-        MIN_VERT_ANGLE,
+        MAX_VERT_ANGLE,
         TREE_COLOR
     );
 

@@ -12,12 +12,12 @@ class Tree
 private:
 	Branch* trunk_branch;
 	
-	// buffer object ids
-	unsigned int vao_id; // vertex arrays
-	unsigned int vbo_id; // vertex buffer id
-	unsigned int ibo_id; // index buffer id
+	//// buffer object ids
+	//unsigned int vao_id; // vertex arrays
+	//unsigned int vbo_id; // vertex buffer id
+	//unsigned int ibo_id; // index buffer id
 
-	void init_tree_buffers();
+	//void init_tree_buffers();
 
 public:
 	// random max depth selection
