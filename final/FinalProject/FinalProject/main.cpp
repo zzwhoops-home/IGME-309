@@ -172,6 +172,17 @@ void keyboard(unsigned char key, int x, int y)
     }
 }
 
+/*
+    Function to handle OpenGL initialization params
+*/
+void initGL() {
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_LINE_SMOOTH);
+    glLineWidth(2.0f);
+}
+
 // ============================================================================
 // MAIN FUNCTION
 // ============================================================================
@@ -184,19 +195,15 @@ int main(int argc, char** argv)
     glutCreateWindow("IGME 309 Final Project - Audio Visualizer");
 
     // OpenGL setup
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_LINE_SMOOTH);
-    glLineWidth(2.0f);
+    initGL();
 
     // Initialize audio analyzer
     // Mode 1: microphone mode (recommended)
-    g_analyzer = new AudioAnalyzer(44100, 1024);
+    //g_analyzer = new AudioAnalyzer(44100, 1024);
     //
     // Mode 2: file mode.
     // WAV file only.
-    //g_analyzer = new AudioAnalyzer("jingle_bells.wav");
+    g_analyzer = new AudioAnalyzer("jingle_bells.wav");
 
     g_analyzer->setAudioCallback(onAudioFeaturesUpdated);
 
