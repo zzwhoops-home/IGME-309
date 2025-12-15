@@ -22,7 +22,7 @@ AudioFeatures g_currentFeatures;
 std::deque<float> pitchDeque;
 
 const float CAMERA_DISTANCE = 50.0f;
-const float CAMERA_HEIGHT = 30.0f;
+const float CAMERA_HEIGHT = 20.0f;
 
 Tree* tree;
 ParticleSystem* particleSystem;
@@ -86,7 +86,7 @@ void display()
 
     glMatrixMode(GL_MODELVIEW);
 
-    float theta = static_cast<float>(curTime) / 4000;
+    float theta = static_cast<float>(curTime) / 10000;
 
     gluLookAt(
         CAMERA_DISTANCE * cos(theta), CAMERA_HEIGHT, CAMERA_DISTANCE * sin(theta), // eye position
@@ -95,63 +95,14 @@ void display()
     );
 
     //gluLookAt(
-    //    CAMERA_DISTANCE, CAMERA_HEIGHT, 0.0f, // eye position
+    //    50.0f, 15.0f, 0.0f, // eye position
     //    0.0f, 15.0f, 0.0f, // target
     //    0.0f, 1.0f, 0.0f // up vector
     //);
 
     tree->draw();
     particleSystem->draw();
-
-    //glColor3f(0.5f, 0.35f, 0.05f);
-    //glPushMatrix();
-    //    glTranslatef(0.0f, 5.0f, 0.0f);
-    //    glScalef(1.0f, 10.0f, 1.0f);
-    //    glutSolidCube(1.0f);
-    //glPopMatrix();
-
-    //// ***********************************************************************
-    //// ---- EXAMPLE VISUALIZATION (Replace with your own!) ----
-
-    //// Draw waveform
-    //glColor3f(0.0f, 1.0f, 0.0f);
-    //glBegin(GL_LINE_STRIP);
-    //for (size_t i = 0; i < g_currentFeatures.waveform.size(); i++)
-    //{
-    //    float x = -1.0f + 2.0f * i / g_currentFeatures.waveform.size();
-    //    float y = g_currentFeatures.waveform[i] * 0.4f;
-    //    glVertex2f(x, y + 0.5f);
-    //}
-    //glEnd();
-
-    //// Draw spectrum bars
-    //glColor3f(1.0f, 0.5f, 0.0f);
-    //size_t numBars = std::min(g_currentFeatures.spectrum.size(), (size_t)100);
-    //float barWidth = 2.0f / numBars;
-
-    //for (size_t i = 0; i < numBars; i++)
-    //{
-    //    float x = -1.0f + i * barWidth;
-    //    float height = g_currentFeatures.spectrum[i] * 0.5f;
-
-    //    glBegin(GL_QUADS);
-    //    glVertex2f(x, -0.5f);
-    //    glVertex2f(x + barWidth * 0.8f, -0.5f);
-    //    glVertex2f(x + barWidth * 0.8f, -0.5f + height);
-    //    glVertex2f(x, -0.5f + height);
-    //    glEnd();
-    //}
-
-    //// Draw magnitude indicator
-    //glColor3f(1.0f, 0.0f, 0.0f);
-    //glBegin(GL_QUADS);
-    //glVertex2f(-0.9f, -0.9f);
-    //glVertex2f(-0.9f + g_currentFeatures.magnitude * 1.8f, -0.9f);
-    //glVertex2f(-0.9f + g_currentFeatures.magnitude * 1.8f, -0.85f);
-    //glVertex2f(-0.9f, -0.85f);
-    //glEnd();
-
-    //// ***********************************************************************
+    lake->draw();
 
     glutSwapBuffers();
 }
@@ -161,11 +112,6 @@ void display()
  */
 void idle()
 {
-    // ***********************************************************************
-    // You might want to do animation here.
-    // 
-    // ***********************************************************************
-
     curTime = glutGet(GLUT_ELAPSED_TIME); // returns the number of milliseconds since glutInit() was called.
     deltaTime = (float)(curTime - preTime) / 1000.0f; // frame-different time in seconds 
 
@@ -194,6 +140,9 @@ void idle()
 
     // update tree
     tree->update_tree(static_cast<float>(deltaTime), g_currentFeatures.pitch);
+
+    // lake
+    lake->update_mesh(g_currentFeatures.spectrum);
 
     preTime = curTime; // the curTime become the preTime for the next frame
 
@@ -277,6 +226,8 @@ void initGL() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_LINE_SMOOTH);
     glLineWidth(2.0f);
+
+    glewInit();
 }
 
 void initTree()
@@ -328,8 +279,8 @@ void initRain(int NUM_PARTICLES)
 
 void initLake()
 {
-    vec3 offset = vec3(0.0f, -1.0f, 0.0f);
-    lake = new Lake(offset, 32, 6.0f, 6.0f);
+    vec3 offset = vec3(0.0f, 0.0f, 0.0f);
+    lake = new Lake(offset, 16, 70.0f, 70.0f);
 
     lake->init();
 }
@@ -340,7 +291,7 @@ void initWorld()
     initTree();
 
     // create rain particle system
-    initRain(2000);
+    initRain(3333);
 
     // create lake
     initLake();

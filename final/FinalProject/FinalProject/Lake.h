@@ -10,29 +10,40 @@
 // include the gl mathematic library 
 #include <glm/glm.hpp>
 
+#include <deque>
 #include <vector>
 
 using namespace glm;
 
+struct Vertex {
+	float x; float y; float z;
+	float xN; float yN; float zN;
+	float r; float g; float b; float a;
+};
+
 class Lake
 {
 private:
-	int history_length = 50;
+	int history_length = 100;
+	float yAmp = 10.0f;
 	int num_bars;
 	float lake_width;
 	float lake_depth;
 
 	int max_verts;
 
-	std::vector<vec3> vertices;
+	std::deque<std::vector<float>> history;
+	std::vector<Vertex> vertices;
+	std::vector<unsigned int> indices;
 
-	unsigned int vbo_id, vao_id, ibo_id;
+	GLuint vbo_id, vao_id, ibo_id = 0;
 
 	vec3 offset;
 public:
 	Lake(vec3 offset, int num_bars, float lake_width, float lake_depth);
 	~Lake();
 	void init();
-	void update_mesh();
+	void update_mesh(std::vector<float> spectrum);
+	void draw();
 };
 

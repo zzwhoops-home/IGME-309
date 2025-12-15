@@ -102,6 +102,7 @@ void Tree::generate_tree()
     vec3 start_dir = vec3(0.0f, 1.0f, 0.0f);
 
     // all branches will be this color
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
     glColor3fv(color);
     //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
 
@@ -110,6 +111,7 @@ void Tree::generate_tree()
 
     // start branch child recursion
     trunk_branch->generate_children(this, 0, max_depth);
+    glPopAttrib();
 }
 
 void Tree::update_tree(float deltaTime, float pitch)

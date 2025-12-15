@@ -34,7 +34,7 @@ private:
 	float redGreenAmount = 0.6f;
 
 	// position range
-	float xzBound = 20.0f;
+	float xzBound = 30.0f;
 	float startY = 50.0f;
 
 public:
