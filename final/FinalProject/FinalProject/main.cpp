@@ -37,6 +37,8 @@ unsigned int curTime = 0;
 unsigned int preTime = 0;
 float deltaTime = 0.0f;
 
+void cleanup();
+
 void onAudioFeaturesUpdated(const AudioFeatures& features)
 {
     g_currentFeatures = features;
@@ -82,7 +84,6 @@ void onSpectralCentroidChange(float centroid)
 void updateBGColor()
 {
     float ratio = clamp((g_analyzer->getCurrentTime() / g_analyzer->getDuration()), 0.0f, 1.0f) * 2;
-    std::cout << ratio << std::endl;
 
     float r, g, b, a;
 
@@ -147,6 +148,7 @@ void display()
         0.0f, 15.0f, 0.0f, // target
         0.0f, 1.0f, 0.0f // up vector
     );
+
 
     tree->draw();
 
@@ -217,7 +219,7 @@ void reshape(int w, int h)
         45.0f, // fov
         float(w) / float(h), // aspect ratio
         1.0f, // near clip
-        100.0f // far clip
+        200.0f // far clip
     );
 
     glMatrixMode(GL_MODELVIEW);
@@ -236,7 +238,7 @@ void keyboard(unsigned char key, int x, int y)
         if (g_analyzer)
         {
             g_analyzer->stop();
-            delete g_analyzer;
+            cleanup();
         }
         exit(0);
         break;
@@ -252,7 +254,6 @@ void keyboard(unsigned char key, int x, int y)
         break;
     }
 }
-
 
 /**
 * Function to handle OpenGL initialization params
@@ -356,10 +357,12 @@ void cleanup()
 {
     delete tree;
     delete particleSystem;
+    delete lake;
     delete g_analyzer;
 
     tree = nullptr;
     particleSystem = nullptr;
+    lake = nullptr;
     g_analyzer = nullptr;
 }
 
