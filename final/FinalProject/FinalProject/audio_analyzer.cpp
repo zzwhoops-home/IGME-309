@@ -520,6 +520,11 @@ void AudioAnalyzer::processAudioBuffer(const float* buffer, int frameCount)
 
 float AudioAnalyzer::calculatePitch(const float* buffer, int frameCount)
 {
+    if (m_features.rms < 0.001f)
+    {
+        return 0.0f;
+    }
+
     std::vector<float> autocorr(frameCount / 2, 0.0f);
 
     for (int lag = 0; lag < frameCount / 2; lag++)
@@ -530,19 +535,40 @@ float AudioAnalyzer::calculatePitch(const float* buffer, int frameCount)
         }
     }
 
-    int peakIndex = 1;
-    float maxVal = autocorr[1];
+    int minLag = 20;
+    int bestLag = -1;
+    float maxVal = 0.0f;
 
-    for (int i = 20; i < frameCount / 2; i++)
+    for (int i = minLag; i < frameCount / 2; i++)
     {
         if (autocorr[i] > maxVal)
         {
             maxVal = autocorr[i];
-            peakIndex = i;
+            bestLag = i;
         }
     }
 
-    return (maxVal > 0.1f) ? (float)m_sampleRate / peakIndex : 0.0f;
+    // --- STAGE 4: Octave Error Correction (Sub-harmonic check) ---
+    // Look for an earlier peak that is "strong enough"
+    // A strong earlier peak suggests the real pitch is higher than what we found.
+
+    float subHarmonicThreshold = 0.90f; // 90% strength required to override global max
+    int searchLimit = bestLag / 2; // Optimization: don't search too close to 0
+
+    // We scan from minLag up to our current bestLag
+    for (int i = minLag; i < bestLag; i++) {
+        // Check if this index is a local peak (higher than neighbors)
+        if (autocorr[i] > autocorr[i - 1] && autocorr[i] > autocorr[i + 1]) {
+            // If this earlier peak is strong enough relative to the global max...
+            if (autocorr[i] > (maxVal * subHarmonicThreshold)) {
+                bestLag = i; // ...we prefer the shorter period (higher frequency)
+                maxVal = autocorr[i]; // Update maxVal if needed for further checks
+                break; // We found the fundamental, stop searching
+            }
+        }
+    }
+
+    return (float)m_sampleRate / bestLag;
 }
 
 float AudioAnalyzer::calculateSpectralCentroid(const std::vector<float>& spectrum)

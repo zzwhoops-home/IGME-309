@@ -91,28 +91,73 @@ Tree::~Tree()
 
 void Tree::generate_tree()
 {
+    if (trunk_branch != nullptr)
+    {
+        delete trunk_branch;
+
+        trunk_branch = nullptr;
+    }
+
     vec3 origin = vec3(0.0f, 0.0f, 0.0f);
     vec3 start_dir = vec3(0.0f, 1.0f, 0.0f);
 
     // all branches will be this color
     glColor3fv(color);
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
+    //glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, color);
 
     // create trunk
-    trunk_branch = new Branch(origin, start_dir, start_height, start_width);
+    trunk_branch = new Branch(origin, start_dir, start_height, start_width, 0.0f, 0.0f);
 
     // start branch child recursion
     trunk_branch->generate_children(this, 0, max_depth);
 }
 
-void Tree::update_tree()
+void Tree::update_tree(float deltaTime, float pitch)
 {
-    //for (Branch* branch : )
+    pitchHistory.push_back(pitch);
+    
+
+    if (pitchHistory.size() > 50)
+    {
+        pitchHistory.pop_front();
+    }
+
+    targetTimer += deltaTime;
+
+    if (targetTimer >= targetUpdateInterval && pitchHistory.size() > 0)
+    {
+        float total = 0.0f;
+        for (int i = 0; i < pitchHistory.size(); i++)
+        {
+            total += pitchHistory[i];
+        }
+
+        // get new pitch target value
+        pitchTargetValue = total / pitchHistory.size();
+
+        targetTimer = 0.0f;
+    }
+
+    if (pitchHistory.size() > 0)
+    {
+        float t = 1.0f - pow(lerpDampening, deltaTime);
+        curPitchValue = lerp(curPitchValue, pitchTargetValue, t);
+
+        //std::cout << curPitchValue << " " << pitchTargetValue << std::endl;
+        float rotOffset = clamp((curPitchValue / maxPitchValue) / 2, 0.0f, 0.5f);
+
+        trunk_branch->update_branch(rotOffset, 0);
+    }
+
 }
 
 void Tree::draw()
 {
-    glMatrixMode(GL_MODELVIEW);
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glPushMatrix();
 
     trunk_branch->draw();
+
+    glPopMatrix();
+    glPopAttrib();
 }

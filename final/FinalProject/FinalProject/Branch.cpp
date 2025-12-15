@@ -3,12 +3,22 @@
 #include "utils.h"
 #include <iostream>
 
-Branch::Branch(vec3 parent_end_pt, vec3 direction, float height, float width)
+Branch::Branch(vec3 parent_end_pt, vec3 direction, float height, float width, float theta, float phi)
 {
 	this->start_pt = parent_end_pt;
 	this->direction = direction;
 	this->height = height;
 	this->width = width;
+
+	this->theta = theta;
+	this->phi = phi;
+
+	this->rotOffset = 0.0f;
+
+	this->color[0] = 0.35f;
+	this->color[1] = 0.35f;
+	this->color[2] = 0.7f;
+	this->color[3] = 0.85f;
 
 	// set end point
 	vec3 end_pt = start_pt + (direction * height);
@@ -17,7 +27,7 @@ Branch::Branch(vec3 parent_end_pt, vec3 direction, float height, float width)
 
 Branch::~Branch()
 {
-	for (Branch* child : this->childBranches)
+	for (Branch* child : this->child_branches)
 	{
 		delete child;
 	}
@@ -75,13 +85,13 @@ void Branch::generate_children(const Tree* base_tree, int cur_depth, int max_dep
 		float child_width = base_tree->start_width * pow(base_tree->width_falloff, cur_depth + 1);
 
 		// the tree base should have random rotation all around the tree
-		float theta = (cur_depth == 0) ? randFloat(0.0f, M_PI * 2) : randFloat(base_tree->min_rotation, base_tree->max_rotation);
-		float phi = randFloat(0, base_tree->max_vert_angle);
+		float childTheta = (cur_depth == 0) ? randFloat(0.0f, M_PI * 2) : randFloat(base_tree->min_rotation, base_tree->max_rotation);
+		float childPhi = randFloat(0, base_tree->max_vert_angle);
 		vec3 child_direction = calc_child_dir(direction, theta, phi);
 
 		// create new branch, add to array
-		Branch* branch = new Branch(child_start_pt, child_direction, child_height, child_width);
-		childBranches.push_back(branch);
+		Branch* branch = new Branch(child_start_pt, child_direction, child_height, child_width, childTheta, childPhi);
+		child_branches.push_back(branch);
 
 		// generate those children
 		if (cur_depth == 0)
@@ -93,6 +103,37 @@ void Branch::generate_children(const Tree* base_tree, int cur_depth, int max_dep
 		{
 			branch->generate_children(base_tree, cur_depth + 1, max_depth);
 		}
+	}
+}
+
+void Branch::update_branch(float rotOffset, int cur_depth)
+{
+	this->end_pt = this->start_pt + (this->direction * this->height);
+
+	vec3 child_start_pt = this->end_pt;
+
+	// std::cout << cur_depth << std::endl;
+
+	for (Branch* child_branch : child_branches)
+	{
+		child_branch->start_pt = this->end_pt;
+
+		// the tree base should have random rotation all around the tree
+		vec3 child_direction = calc_child_dir(direction, child_branch->theta, child_branch->phi + rotOffset);
+
+		child_branch->direction = child_direction;
+
+		child_branch->update_branch(rotOffset, cur_depth + 1);
+
+		// update color
+		child_branch->color[0] = rotOffset; // r
+		child_branch->color[3] = 1.0f - rotOffset; // a
+	}
+
+	// leaf node
+	if (child_branches.size() == 0)
+	{
+		return;
 	}
 }
 
@@ -117,11 +158,18 @@ void Branch::draw()
 	// scale
 	glScalef(width, height, width);
 
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
+	glColor4f(1 - color[0], color[1], color[2], color[3]);
 	glutSolidCube(1.0f);
+
+	glColor4f(color[0], color[1], color[2], color[3]);
+	glutWireCube(1.02f);
+
+	glPopAttrib();
 
 	glPopMatrix();
 	
-	for (Branch* child_branch : childBranches)
+	for (Branch* child_branch : child_branches)
 	{
 		child_branch->draw();
 	}

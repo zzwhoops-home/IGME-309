@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstdlib> // srand, rand, time
 #include <ctime>
+#include <deque>
 #include "utils.h"
 
 class Branch;
@@ -11,6 +12,18 @@ class Tree
 {
 private:
 	Branch* trunk_branch;
+
+	// used for animation
+	std::deque<float> pitchHistory;
+
+	// maximum rotation
+	float maxPitchValue = 2200.0f;
+	float curPitchValue = 0.0f;
+	float pitchTargetValue = 0.0f; // for lerping
+	float lerpDampening = 0.5f;
+
+	float targetTimer = 0.0f;
+	float targetUpdateInterval = 0.25f; // seconds
 	
 	//// buffer object ids
 	//unsigned int vao_id; // vertex arrays
@@ -52,7 +65,7 @@ public:
 		const float color_in[3]);
 	~Tree();
 	void generate_tree();
-	void update_tree();
+	void update_tree(float deltaTime, float pitch);
 	void draw();
 };
 

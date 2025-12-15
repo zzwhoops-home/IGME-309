@@ -25,3 +25,5 @@ int randInt(int min, int max);
 float randFloat(float min, float max);
 
 vec3 getRandomVec(float xMin, float xMax, float yMin, float yMax, float zMin, float zMax);
+
+float lerp(float a, float b, float t);

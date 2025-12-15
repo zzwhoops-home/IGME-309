@@ -25,3 +25,11 @@ vec3 getRandomVec(float xMin, float xMax, float yMin, float yMax, float zMin, fl
 		randFloat(yMin, zMax)
 	);
 }
+
+float lerp(float a, float b, float t)
+{
+	if (t < 0.0f) t = 0.0f;
+	if (t > 1.0f) t = 1.0f;
+
+	return a * (1.0f - t) + b * t;
+}

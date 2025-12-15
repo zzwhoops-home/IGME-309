@@ -30,19 +30,26 @@ class Tree;
 class Branch
 {
 private:
-	std::vector<Branch*> childBranches;
+	std::vector<Branch*> child_branches;
 public:
 	vec3 start_pt;
 	vec3 end_pt;
 	vec3 direction;
+	float theta;
+	float phi;
 	float height;
 	float width;
 
-	Branch(vec3 parent_end_pt, vec3 direction, float height, float width);
+	float color[4];
+	float rotOffset;
+
+	Branch(vec3 parent_end_pt, vec3 direction, float height, float width, float theta, float phi);
 	~Branch();
+
 	
 	vec3 calc_child_dir(const vec3& parent_dir, float theta, float phi);
 	void generate_children(const Tree* base_tree, int cur_depth, int max_depth);
+	void update_branch(float rotOffset, int cur_depth);
 	void draw();
 };
 

@@ -7,24 +7,38 @@
 #endif
 
 #include "audio_analyzer.h"
+#include "ParticleSystem.h"
 #include "Tree.h"
 #include "Branch.h"
+#include "Lake.h"
 #include <iostream>
-
+#include <deque>
 
 // Global audio analyzer
 AudioAnalyzer* g_analyzer = nullptr;
 AudioFeatures g_currentFeatures;
 
+// store pitch average
+std::deque<float> pitchDeque;
+
 const float CAMERA_DISTANCE = 50.0f;
+const float CAMERA_HEIGHT = 30.0f;
 
 Tree* tree;
+ParticleSystem* particleSystem;
+Lake* lake;
+
+// tracking the game time - millisecond 1)
+unsigned int curTime = 0;
+unsigned int preTime = 0;
+float deltaTime = 0.0f;
 
 void onAudioFeaturesUpdated(const AudioFeatures& features)
 {
     g_currentFeatures = features;
 
     // TODO: Add your own audio-reactive logic here
+    particleSystem->setIntensity(features.rms);
 
     // Example: Print when loud sound detected
     if (features.magnitude > 0.5f)
@@ -39,6 +53,8 @@ void onAudioFeaturesUpdated(const AudioFeatures& features)
 void onMagnitudeChange(float magnitude)
 {
     // TODO: Implement volume-reactive visualizations
+    //std::cout << magnitude << std::endl;
+
 }
 
 /**
@@ -47,6 +63,7 @@ void onMagnitudeChange(float magnitude)
 void onPitchDetected(float pitch)
 {
     // TODO: Map pitch to visual properties
+    //std::cout << pitch << std::endl;
 }
 
 /**
@@ -54,6 +71,7 @@ void onPitchDetected(float pitch)
  */
 void onSpectralCentroidChange(float centroid)
 {
+    //std::cout << centroid << std::endl;
     // TODO: Use spectral centroid for brightness effects
 }
 
@@ -66,13 +84,24 @@ void display()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
+    glMatrixMode(GL_MODELVIEW);
+
+    float theta = static_cast<float>(curTime) / 4000;
+
     gluLookAt(
-        CAMERA_DISTANCE, 15.0f, 0.0f, // eye position
+        CAMERA_DISTANCE * cos(theta), CAMERA_HEIGHT, CAMERA_DISTANCE * sin(theta), // eye position
         0.0f, 15.0f, 0.0f, // target
         0.0f, 1.0f, 0.0f // up vector
     );
 
+    //gluLookAt(
+    //    CAMERA_DISTANCE, CAMERA_HEIGHT, 0.0f, // eye position
+    //    0.0f, 15.0f, 0.0f, // target
+    //    0.0f, 1.0f, 0.0f // up vector
+    //);
+
     tree->draw();
+    particleSystem->draw();
 
     //glColor3f(0.5f, 0.35f, 0.05f);
     //glPushMatrix();
@@ -137,6 +166,8 @@ void idle()
     // 
     // ***********************************************************************
 
+    curTime = glutGet(GLUT_ELAPSED_TIME); // returns the number of milliseconds since glutInit() was called.
+    deltaTime = (float)(curTime - preTime) / 1000.0f; // frame-different time in seconds 
 
     #pragma region Audio Feature Processing DO NOT REMOVE
     // Update callbacks based on current features
@@ -157,6 +188,14 @@ void idle()
         onSpectralCentroidChange(g_currentFeatures.spectralCentroid);
     }
     #pragma endregion
+
+    // update particle system
+    particleSystem->update(deltaTime, static_cast<float>(curTime));
+
+    // update tree
+    tree->update_tree(static_cast<float>(deltaTime), g_currentFeatures.pitch);
+
+    preTime = curTime; // the curTime become the preTime for the next frame
 
     glutPostRedisplay();
 }
@@ -204,7 +243,8 @@ void keyboard(unsigned char key, int x, int y)
         // Optional: Add more keyboard controls
         // Example: Different visualization modes, color schemes, etc.
     case '1':
-        std::cout << "Mode 1 selected" << std::endl;
+        std::cout << "Created new tree!" << std::endl;
+        tree->generate_tree();
         break;
     case '2':
         std::cout << "Mode 2 selected" << std::endl;
@@ -217,7 +257,7 @@ void keyboard(unsigned char key, int x, int y)
 * Function to handle OpenGL initialization params
 */
 void initGL() {
-    glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
 
     // for 3D rendering
     glEnable(GL_DEPTH_TEST);
@@ -246,21 +286,21 @@ void initTree()
     int MIN_DEPTH = 4;
     int MAX_DEPTH = 6;
     int MIN_CHILDREN = 2;
-    int MAX_CHILDREN = 3;
+    int MAX_CHILDREN = 4;
 
-    float START_HEIGHT = 10.0f; // The main trunk is 10 units tall
-    float START_WIDTH = 1.0f;   // The main trunk is 1 unit wide
+    float START_HEIGHT = 11.0f; // The main trunk is 10 units tall
+    float START_WIDTH = 1.5f;   // The main trunk is 1 unit wide
 
     float HEIGHT_FALLOFF = 0.75f; // Each child branch is 75% the length of its parent
-    float WIDTH_FALLOFF = 0.6f;   // Each child branch is 80% the width of its parent
+    float WIDTH_FALLOFF = 0.50f;   // Each child branch is 80% the width of its parent
 
-    float MIN_ROTATION = -0.7f;   // -28 degrees (Min random angle, use radians)
-    float MAX_ROTATION = 0.7f;    // +28 degrees (Max random angle)
+    float MIN_ROTATION = -3.0f;   // -28 degrees (Min random angle, use radians)
+    float MAX_ROTATION = 3.0f;    // +28 degrees (Max random angle)
 
-    float MAX_VERT_ANGLE = 1.0f;
-
-    // Standard brown color for the wood
-    const float TREE_COLOR[3] = { 0.50f, 0.4f, 0.2f };
+    float MAX_VERT_ANGLE = 0.9f;
+    
+    // default color (can change)
+    const float TREE_COLOR[3] = { 0.78f, 0.10f, 0.00f };
 
     // --- Instantiate the Tree ---
     tree = new Tree(
@@ -281,16 +321,40 @@ void initTree()
     tree->generate_tree();
 }
 
+void initRain(int NUM_PARTICLES)
+{
+    particleSystem = new ParticleSystem(NUM_PARTICLES);
+}
+
+void initLake()
+{
+    vec3 offset = vec3(0.0f, -1.0f, 0.0f);
+    lake = new Lake(offset, 32, 6.0f, 6.0f);
+
+    lake->init();
+}
+
 void initWorld()
 {
     // create tree
     initTree();
+
+    // create rain particle system
+    initRain(2000);
+
+    // create lake
+    initLake();
 }
 
 void cleanup()
 {
     delete tree;
+    delete particleSystem;
     delete g_analyzer;
+
+    tree = nullptr;
+    particleSystem = nullptr;
+    g_analyzer = nullptr;
 }
 
 // ============================================================================
@@ -316,7 +380,7 @@ int main(int argc, char** argv)
     //
     // Mode 2: file mode.
     // WAV file only.
-    g_analyzer = new AudioAnalyzer("jingle_bells.wav");
+    g_analyzer = new AudioAnalyzer("blessing_song.wav");
 
     g_analyzer->setAudioCallback(onAudioFeaturesUpdated);
 
