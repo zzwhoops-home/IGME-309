@@ -81,15 +81,14 @@ void Lake::update_mesh(std::vector<float> spectrum)
 		history.pop_front();
 	}
 
-	float width = lake_width / num_bars;
-	float depth = lake_depth / history.size();
-
 	unsigned int vertex_offset = 0;
 
 	if (history.size() >= 2)
 	{
 		for (size_t z = 0; z < history.size() - 1; z++)
 		{
+			float width = lake_width / num_bars;
+			float depth = lake_depth / history.size();
 			for (size_t x = 0; x < num_bars - 1; x++)
 			{
 				if (x >= history[z].size())
@@ -112,9 +111,9 @@ void Lake::update_mesh(std::vector<float> spectrum)
 				// standard normal
 				vec3 normal = vec3(0.0f, 1.0f, 0.0f);
 				float colors[4] = {
-					0.5f + y00 / yAmp,
-					0.75f + y00 / yAmp,
-					0.8f + y00 / yAmp,
+					0.7f + y00 / yAmp,
+					0.1f + y00 / yAmp,
+					0.9f + y00 / yAmp,
 					0.8f
 				};
 
@@ -154,17 +153,34 @@ void Lake::update_mesh(std::vector<float> spectrum)
 void Lake::draw()
 {
 	glPushMatrix();
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	vec3 translation = vec3(-lake_width / 2.0f, 0.0f, -lake_depth / 2.0f);
 	translation += offset;
 	glTranslatef(translation.x, translation.y, translation.z);
 
+	// bind array
 	glBindVertexArray(vao_id);
 
-	// draw indices
+	// enable filling
+	glEnable(GL_POLYGON_OFFSET_FILL);
+	glPolygonOffset(1.0f, 1.0f);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void*)0);
+
+	glDisable(GL_POLYGON_OFFSET_FILL);
+
+	// enable wireframe
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glLineWidth(2.0f);
+	glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void*)0);
 
 	// unbind vao and vbo
 	glBindVertexArray(0);
 
 	glPopMatrix();
+	glPopAttrib();
 }

@@ -21,12 +21,16 @@ AudioFeatures g_currentFeatures;
 // store pitch average
 std::deque<float> pitchDeque;
 
-const float CAMERA_DISTANCE = 50.0f;
-const float CAMERA_HEIGHT = 20.0f;
+const float CAMERA_DISTANCE = 59.0f;
+const float CAMERA_HEIGHT = 15.0f;
 
 Tree* tree;
 ParticleSystem* particleSystem;
 Lake* lake;
+
+float twilight_color[4] = {0.5f, 0.2f, 0.8f, 1.0f};
+float sunsetrise_color[4] = {0.6f, 0.1f, 0.1f, 1.0f};
+float day_color[4] = {0.3f, 0.6f, 0.8f, 1.0f};
 
 // tracking the game time - millisecond 1)
 unsigned int curTime = 0;
@@ -75,12 +79,62 @@ void onSpectralCentroidChange(float centroid)
     // TODO: Use spectral centroid for brightness effects
 }
 
+void updateBGColor()
+{
+    float ratio = clamp((g_analyzer->getCurrentTime() / g_analyzer->getDuration()), 0.0f, 1.0f) * 2;
+    std::cout << ratio << std::endl;
+
+    float r, g, b, a;
+
+    if (ratio > 0.0f && ratio <= 0.4f)
+    {
+        r = lerp(twilight_color[0], sunsetrise_color[0], ratio / 0.4f);
+        g = lerp(twilight_color[1], sunsetrise_color[1], ratio / 0.4f);
+        b = lerp(twilight_color[2], sunsetrise_color[2], ratio / 0.4f);
+        a = lerp(twilight_color[3], sunsetrise_color[3], ratio / 0.4f);
+    }
+    else if (ratio > 0.4f && ratio <= 0.7f)
+    {
+        r = lerp(sunsetrise_color[0], day_color[0], (ratio - 0.4f) / 0.3f);
+        g = lerp(sunsetrise_color[1], day_color[1], (ratio - 0.4f) / 0.3f);
+        b = lerp(sunsetrise_color[2], day_color[2], (ratio - 0.4f) / 0.3f);
+        a = lerp(sunsetrise_color[3], day_color[3], (ratio - 0.4f) / 0.3f);
+    }
+    else if (ratio > 1.3f && ratio <= 1.6f)
+    {
+        r = lerp(day_color[0], sunsetrise_color[0], (ratio - 1.3f) / 0.3f);
+        g = lerp(day_color[1], sunsetrise_color[1], (ratio - 1.3f) / 0.3f);
+        b = lerp(day_color[2], sunsetrise_color[2], (ratio - 1.3f) / 0.3f);
+        a = lerp(day_color[3], sunsetrise_color[3], (ratio - 1.3f) / 0.3f);
+    }
+    else if (ratio > 1.6f)
+    {
+        r = lerp(sunsetrise_color[0], twilight_color[0], (ratio - 1.6f) / 0.4f);
+        g = lerp(sunsetrise_color[1], twilight_color[1], (ratio - 1.6f) / 0.4f);
+        b = lerp(sunsetrise_color[2], twilight_color[2], (ratio - 1.6f) / 0.4f);
+        a = lerp(sunsetrise_color[3], twilight_color[3], (ratio - 1.6f) / 0.4f);
+    }
+    else
+    {
+        r = day_color[0];
+        g = day_color[1];
+        b = day_color[2];
+        a = day_color[3];
+    }
+    
+    glClearColor(r, g, b, a);
+
+    //std::cout << ratio << " " << r << " " << g << " " << b << " " << a << std::endl;
+}
+
 // ============================================================================
 // OPENGL VISUALIZATION FUNCTIONS
 // ============================================================================
 
 void display()
 {
+    // calls glClearColor();
+    updateBGColor();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
@@ -94,15 +148,13 @@ void display()
         0.0f, 1.0f, 0.0f // up vector
     );
 
-    //gluLookAt(
-    //    50.0f, 15.0f, 0.0f, // eye position
-    //    0.0f, 15.0f, 0.0f, // target
-    //    0.0f, 1.0f, 0.0f // up vector
-    //);
-
     tree->draw();
-    particleSystem->draw();
+
+    glDepthMask(GL_FALSE);
     lake->draw();
+    glDepthMask(GL_TRUE);
+
+    particleSystem->draw();
 
     glutSwapBuffers();
 }
@@ -206,7 +258,7 @@ void keyboard(unsigned char key, int x, int y)
 * Function to handle OpenGL initialization params
 */
 void initGL() {
-    glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
+    glClearColor(twilight_color[0], twilight_color[1], twilight_color[2], twilight_color[3]);
 
     // for 3D rendering
     glEnable(GL_DEPTH_TEST);
@@ -216,11 +268,14 @@ void initGL() {
     glEnable(GL_LIGHT0);
 
     GLfloat light_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-    GLfloat light_diffuse[] = { 0.6f, 0.6f, 0.6f, 1.0f };
+    GLfloat light_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
     glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+
+    GLfloat position[] = { 25.0f, 0.0f, 25.0f, 0.2f };
+    glLightfv(GL_LIGHT0, GL_POSITION, position);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -279,8 +334,8 @@ void initRain(int NUM_PARTICLES)
 
 void initLake()
 {
-    vec3 offset = vec3(0.0f, 0.0f, 0.0f);
-    lake = new Lake(offset, 16, 70.0f, 70.0f);
+    vec3 offset = vec3(0.0f, -2.0f, 0.0f);
+    lake = new Lake(offset, 32, 150.0f, 150.0f);
 
     lake->init();
 }

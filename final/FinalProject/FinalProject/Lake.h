@@ -13,6 +13,8 @@
 #include <deque>
 #include <vector>
 
+#include "utils.h"
+
 using namespace glm;
 
 struct Vertex {
@@ -24,8 +26,8 @@ struct Vertex {
 class Lake
 {
 private:
-	int history_length = 100;
-	float yAmp = 10.0f;
+	int history_length = 64;
+	float yAmp = 5.0f;
 	int num_bars;
 	float lake_width;
 	float lake_depth;
